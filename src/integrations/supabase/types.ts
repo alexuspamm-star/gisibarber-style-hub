@@ -14,13 +14,162 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      bookings: {
+        Row: {
+          booking_date: string
+          booking_time: string
+          created_at: string
+          customer_name: string
+          description: string | null
+          id: string
+          image_url: string | null
+          phone: string
+          status: string
+        }
+        Insert: {
+          booking_date: string
+          booking_time: string
+          created_at?: string
+          customer_name: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          phone: string
+          status?: string
+        }
+        Update: {
+          booking_date?: string
+          booking_time?: string
+          created_at?: string
+          customer_name?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          phone?: string
+          status?: string
+        }
+        Relationships: []
+      }
+      closed_days: {
+        Row: {
+          day: string
+          reason: string | null
+        }
+        Insert: {
+          day: string
+          reason?: string | null
+        }
+        Update: {
+          day?: string
+          reason?: string | null
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          id: string
+          updated_at: string
+          username: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          id: string
+          updated_at?: string
+          username: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          id?: string
+          updated_at?: string
+          username?: string
+        }
+        Relationships: []
+      }
+      reviews: {
+        Row: {
+          author: string
+          body: string
+          created_at: string
+          id: string
+          rating: number
+        }
+        Insert: {
+          author: string
+          body: string
+          created_at?: string
+          id?: string
+          rating?: number
+        }
+        Update: {
+          author?: string
+          body?: string
+          created_at?: string
+          id?: string
+          rating?: number
+        }
+        Relationships: []
+      }
+      site_images: {
+        Row: {
+          created_at: string
+          id: string
+          section: string
+          sort_order: number
+          title: string | null
+          url: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          section: string
+          sort_order?: number
+          title?: string | null
+          url: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          section?: string
+          sort_order?: number
+          title?: string | null
+          url?: string
+        }
+        Relationships: []
+      }
+      work_hours: {
+        Row: {
+          close_time: string
+          is_open: boolean
+          open_time: string
+          slot_minutes: number
+          weekday: number
+        }
+        Insert: {
+          close_time?: string
+          is_open?: boolean
+          open_time?: string
+          slot_minutes?: number
+          weekday: number
+        }
+        Update: {
+          close_time?: string
+          is_open?: boolean
+          open_time?: string
+          slot_minutes?: number
+          weekday?: number
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      taken_slots: { Args: { d: string }; Returns: string[] }
     }
     Enums: {
       [_ in never]: never
