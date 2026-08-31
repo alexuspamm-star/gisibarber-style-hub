@@ -2,12 +2,19 @@ import { Link, useRouterState } from "@tanstack/react-router";
 import { Home, Images, CalendarPlus, Menu, X, LockKeyhole } from "lucide-react";
 import { useEffect, useState } from "react";
 
-const items = [
+type NavItem = {
+  to: "/" | "/galleria" | "/prenota" | "/login";
+  label: string;
+  icon: typeof Home;
+  adminOnly?: boolean;
+};
+
+const items: NavItem[] = [
   { to: "/", label: "Home", icon: Home },
   { to: "/galleria", label: "Galleria", icon: Images },
   { to: "/prenota", label: "Prenota", icon: CalendarPlus },
   { to: "/login", label: "Login", icon: LockKeyhole, adminOnly: true },
-] as const;
+];
 
 export function FloatingNav() {
   const [open, setOpen] = useState(false);
