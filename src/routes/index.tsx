@@ -178,7 +178,10 @@ function Reviews() {
         <form
           onSubmit={(e) => {
             e.preventDefault();
-            if (!author.trim() || !body.trim()) return toast.error("Compila tutti i campi");
+            if (!author.trim() || !body.trim()) {
+              toast.error("Compila tutti i campi");
+              return;
+            }
             mutation.mutate();
           }}
           className="h-fit rounded-xl border border-border bg-card p-5"
