@@ -83,6 +83,11 @@ function LoginPage() {
               onChange={(e) => setPassword(e.target.value)}
             />
           </div>
+          {error && (
+            <p role="alert" className="text-sm text-destructive">
+              Nome utente o password errati
+            </p>
+          )}
           <Button type="submit" className="w-full uppercase tracking-widest" disabled={loading}>
             {loading && <Loader2 className="mr-2 size-4 animate-spin" />}
             Entra

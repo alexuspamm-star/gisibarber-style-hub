@@ -1,8 +1,8 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
-import { ImagePlus, Loader2, CheckCircle2 } from "lucide-react";
+import { ImagePlus, Loader2, CheckCircle2, Home } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { uploadMedia } from "@/lib/media";
+import { formatItalianDate } from "@/lib/site-settings";
 import { buildSlots, normalizeTime, toISODate, WEEKDAYS, type WorkHour } from "@/lib/booking";
 
 export const Route = createFileRoute("/prenota")({
@@ -109,22 +110,30 @@ function Prenota() {
           <CheckCircle2 className="mx-auto size-14 text-primary" />
           <h1 className="display mt-6 text-5xl">Prenotazione inviata</h1>
           <p className="mt-3 text-muted-foreground">
-            Ci vediamo {date && WEEKDAYS[new Date(`${date}T12:00:00`).getDay()]} {date} alle {time}.
+            Ci vediamo {date && WEEKDAYS[new Date(`${date}T12:00:00`).getDay()]}{" "}
+            {formatItalianDate(date)} alle {time}.
           </p>
-          <Button
-            className="mt-8 uppercase tracking-widest"
-            onClick={() => {
-              setDone(false);
-              setDate("");
-              setTime("");
-              setName("");
-              setPhone("");
-              setDescription("");
-              setFile(null);
-            }}
-          >
-            Nuova prenotazione
-          </Button>
+          <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+            <Button
+              className="uppercase tracking-widest"
+              onClick={() => {
+                setDone(false);
+                setDate("");
+                setTime("");
+                setName("");
+                setPhone("");
+                setDescription("");
+                setFile(null);
+              }}
+            >
+              Nuova prenotazione
+            </Button>
+            <Button asChild variant="outline" className="uppercase tracking-widest">
+              <Link to="/">
+                <Home className="size-4" /> Torna alla home
+              </Link>
+            </Button>
+          </div>
         </div>
       </main>
     );
