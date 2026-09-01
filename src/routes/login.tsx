@@ -27,6 +27,7 @@ function LoginPage() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(false);
 
   useEffect(() => {
     ensureAdmin().catch(() => undefined);
@@ -38,13 +39,15 @@ function LoginPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
-    const { error } = await supabase.auth.signInWithPassword({
+    setError(false);
+    const { error: authError } = await supabase.auth.signInWithPassword({
       email: usernameToEmail(username),
       password,
     });
     setLoading(false);
-    if (error) {
-      toast.error("Credenziali non valide");
+    if (authError) {
+      setError(true);
+      toast.error("Nome utente o password errati");
       return;
     }
     navigate({ to: "/dashboard", replace: true });
