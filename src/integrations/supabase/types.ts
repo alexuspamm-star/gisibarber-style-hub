@@ -117,6 +117,7 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          media_type: string
           section: string
           sort_order: number
           title: string | null
@@ -125,6 +126,7 @@ export type Database = {
         Insert: {
           created_at?: string
           id?: string
+          media_type?: string
           section: string
           sort_order?: number
           title?: string | null
@@ -133,10 +135,53 @@ export type Database = {
         Update: {
           created_at?: string
           id?: string
+          media_type?: string
           section?: string
           sort_order?: number
           title?: string | null
           url?: string
+        }
+        Relationships: []
+      }
+      site_settings: {
+        Row: {
+          address: string
+          created_at: string
+          id: string
+          instagram_handle: string
+          instagram_url: string
+          map_url: string
+          phone: string
+          primary_color: string
+          services: string
+          singleton: boolean
+          updated_at: string
+        }
+        Insert: {
+          address?: string
+          created_at?: string
+          id?: string
+          instagram_handle?: string
+          instagram_url?: string
+          map_url?: string
+          phone?: string
+          primary_color?: string
+          services?: string
+          singleton?: boolean
+          updated_at?: string
+        }
+        Update: {
+          address?: string
+          created_at?: string
+          id?: string
+          instagram_handle?: string
+          instagram_url?: string
+          map_url?: string
+          phone?: string
+          primary_color?: string
+          services?: string
+          singleton?: boolean
+          updated_at?: string
         }
         Relationships: []
       }
