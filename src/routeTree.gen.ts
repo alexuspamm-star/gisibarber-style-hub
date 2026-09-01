@@ -10,13 +10,19 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as GalleriaRouteImport } from './routes/galleria'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as PrenotaRouteImport } from './routes/prenota'
+import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
   getParentRoute: () => rootRouteImport,
 } as any)
 const GalleriaRoute = GalleriaRouteImport.update({
@@ -34,36 +40,53 @@ const PrenotaRoute = PrenotaRouteImport.update({
   path: '/prenota',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/galleria': typeof GalleriaRoute
   '/login': typeof LoginRoute
   '/prenota': typeof PrenotaRoute
+  '/dashboard': typeof AuthenticatedDashboardRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/galleria': typeof GalleriaRoute
   '/login': typeof LoginRoute
   '/prenota': typeof PrenotaRoute
+  '/dashboard': typeof AuthenticatedDashboardRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/galleria': typeof GalleriaRoute
   '/login': typeof LoginRoute
   '/prenota': typeof PrenotaRoute
+  '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/galleria' | '/login' | '/prenota'
+  fullPaths: '/' | '/galleria' | '/login' | '/prenota' | '/dashboard'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/galleria' | '/login' | '/prenota'
-  id: '__root__' | '/' | '/galleria' | '/login' | '/prenota'
+  to: '/' | '/galleria' | '/login' | '/prenota' | '/dashboard'
+  id:
+    | '__root__'
+    | '/'
+    | '/_authenticated'
+    | '/galleria'
+    | '/login'
+    | '/prenota'
+    | '/_authenticated/dashboard'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   GalleriaRoute: typeof GalleriaRoute
   LoginRoute: typeof LoginRoute
   PrenotaRoute: typeof PrenotaRoute
@@ -76,6 +99,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/galleria': {
@@ -99,11 +129,30 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PrenotaRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/dashboard': {
+      id: '/_authenticated/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof AuthenticatedDashboardRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
+interface AuthenticatedRouteRouteChildren {
+  AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
+}
+
+const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
+}
+
+const AuthenticatedRouteRouteWithChildren =
+  AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   GalleriaRoute: GalleriaRoute,
   LoginRoute: LoginRoute,
   PrenotaRoute: PrenotaRoute,
