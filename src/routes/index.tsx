@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { WEEKDAYS, type WorkHour } from "@/lib/booking";
+import { useSiteSettings } from "@/lib/site-settings";
 
 const FALLBACK = ["/images/cut-1.jpg", "/images/cut-2.jpg", "/images/cut-3.jpg"];
 
@@ -221,6 +222,7 @@ function Reviews() {
 }
 
 function Contatti() {
+  const { data: settings } = useSiteSettings();
   const { data: hours } = useQuery({
     queryKey: ["work_hours"],
     queryFn: async () => {
@@ -238,16 +240,24 @@ function Contatti() {
       <div className="grid gap-10 lg:grid-cols-3">
         <div className="space-y-4 text-sm">
           <p className="flex items-center gap-3">
-            <MapPin className="size-4 text-primary" /> Via Roma 12, Milano
+            <MapPin className="size-4 text-primary" /> {settings?.address ?? "Via Roma 12, Milano"}
           </p>
+          <a
+            className="flex items-center gap-3 hover:text-primary"
+            href={`tel:${(settings?.phone ?? "").replace(/\s/g, "")}`}
+          >
+            <Phone className="size-4 text-primary" /> {settings?.phone ?? "+39 340 000 0000"}
+          </a>
+          <a
+            className="flex items-center gap-3 hover:text-primary"
+            href={settings?.instagram_url ?? "https://instagram.com/gisibarber"}
+            target="_blank"
+            rel="noreferrer"
+          >
+            <Instagram className="size-4 text-primary" /> @{settings?.instagram_handle ?? "gisibarber"}
+          </a>
           <p className="flex items-center gap-3">
-            <Phone className="size-4 text-primary" /> +39 340 000 0000
-          </p>
-          <p className="flex items-center gap-3">
-            <Instagram className="size-4 text-primary" /> @gisibarber
-          </p>
-          <p className="flex items-center gap-3">
-            <Scissors className="size-4 text-primary" /> Taglio, fade, barba, rasatura
+            <Scissors className="size-4 text-primary" /> {settings?.services ?? "Taglio, fade, barba, rasatura"}
           </p>
         </div>
 
@@ -275,7 +285,10 @@ function Contatti() {
         <div className="overflow-hidden rounded-xl border border-border">
           <iframe
             title="Posizione di Gisibarber"
-            src="https://www.openstreetmap.org/export/embed.html?bbox=9.180%2C45.458%2C9.200%2C45.472&layer=mapnik"
+            src={
+              settings?.map_url ??
+              "https://www.openstreetmap.org/export/embed.html?bbox=9.180%2C45.458%2C9.200%2C45.472&layer=mapnik"
+            }
             className="h-64 w-full"
             loading="lazy"
           />
