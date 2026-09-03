@@ -13,6 +13,20 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { getVideoDuration, MAX_VIDEO_SECONDS } from "@/lib/media";
+import { formatItalianDate, settingsQueryKey, useSiteSettings } from "@/lib/site-settings";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({
@@ -90,6 +104,8 @@ function Dashboard() {
           <TabsTrigger value="home">Foto home</TabsTrigger>
           <TabsTrigger value="galleria">Galleria</TabsTrigger>
           <TabsTrigger value="recensioni">Recensioni</TabsTrigger>
+          <TabsTrigger value="contatti">Contatti</TabsTrigger>
+          <TabsTrigger value="personalizzazione">Personalizzazione</TabsTrigger>
           <TabsTrigger value="account">Account</TabsTrigger>
         </TabsList>
 
@@ -108,6 +124,12 @@ function Dashboard() {
         </TabsContent>
         <TabsContent value="recensioni" className="mt-6">
           <ReviewsPanel />
+        </TabsContent>
+        <TabsContent value="contatti" className="mt-6">
+          <ContactsPanel />
+        </TabsContent>
+        <TabsContent value="personalizzazione" className="mt-6">
+          <AppearancePanel />
         </TabsContent>
         <TabsContent value="account" className="mt-6 space-y-6">
           <AvatarPanel
@@ -217,9 +239,29 @@ function BookingsPanel() {
                     })
                   }
                 />
-                <Button variant="destructive" size="icon" onClick={() => remove.mutate(b.id)}>
-                  <Trash2 className="size-4" />
-                </Button>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="destructive" size="icon" aria-label="Cancella prenotazione">
+                      <Trash2 className="size-4" />
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Cancellare la prenotazione?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Stai per cancellare la prenotazione di {b.customer_name} del{" "}
+                        {formatItalianDate(b.booking_date)} alle {normalizeTime(b.booking_time)}.
+                        L'operazione non può essere annullata.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Annulla</AlertDialogCancel>
+                      <AlertDialogAction onClick={() => remove.mutate(b.id)}>
+                        Sì, cancella
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
               </div>
             </div>
           </li>
@@ -412,13 +454,25 @@ function ImagesPanel({ section, title }: { section: "home" | "gallery"; title: s
     try {
       let order = images.data?.length ?? 0;
       for (const file of Array.from(files)) {
+        const isVideo = file.type.startsWith("video/");
+        if (isVideo) {
+          if (section !== "gallery") {
+            toast.error("I video si possono caricare solo nella galleria");
+            continue;
+          }
+          const duration = await getVideoDuration(file);
+          if (duration > MAX_VIDEO_SECONDS + 0.5) {
+            toast.error(`Il video "${file.name}" supera i ${MAX_VIDEO_SECONDS} secondi`);
+            continue;
+          }
+        }
         const url = await uploadMedia(file, section);
         const { error } = await supabase
           .from("site_images")
-          .insert({ url, section, sort_order: order++ });
+          .insert({ url, section, sort_order: order++, media_type: isVideo ? "video" : "image" });
         if (error) throw error;
       }
-      toast.success("Immagini caricate");
+      toast.success("Caricamento completato");
       qc.invalidateQueries({ queryKey: ["site_images", section] });
     } catch {
       toast.error("Caricamento non riuscito");
@@ -442,12 +496,17 @@ function ImagesPanel({ section, title }: { section: "home" | "gallery"; title: s
         className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-border px-4 py-2"
       >
         {busy ? <Loader2 className="size-4 animate-spin" /> : <Upload className="size-4" />}
-        Carica immagini
+        {section === "gallery" ? "Carica foto o video" : "Carica immagini"}
       </Label>
+      {section === "gallery" && (
+        <p className="mt-2 text-xs text-muted-foreground">
+          Video brevi ammessi: massimo {MAX_VIDEO_SECONDS} secondi.
+        </p>
+      )}
       <input
         id={`upload-${section}`}
         type="file"
-        accept="image/*"
+        accept={section === "gallery" ? "image/*,video/*" : "image/*"}
         multiple
         className="hidden"
         onChange={(e) => handleFiles(e.target.files)}
@@ -456,7 +515,11 @@ function ImagesPanel({ section, title }: { section: "home" | "gallery"; title: s
       <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3">
         {images.data?.map((img) => (
           <div key={img.id} className="group relative overflow-hidden rounded-xl">
-            <img src={img.url} alt={img.title ?? "Taglio Gisibarber"} className="aspect-[3/4] w-full object-cover" />
+            {img.media_type === "video" ? (
+              <video src={img.url} muted loop playsInline controls className="aspect-[3/4] w-full object-cover" />
+            ) : (
+              <img src={img.url} alt={img.title ?? "Taglio Gisibarber"} className="aspect-[3/4] w-full object-cover" />
+            )}
             <Button
               variant="destructive"
               size="icon"
@@ -632,6 +695,142 @@ function CredentialsPanel({ username, onDone }: { username: string; onDone: () =
           {loading && <Loader2 className="size-4 animate-spin" />} Salva credenziali
         </Button>
       </form>
+    </Section>
+  );
+}
+
+/* ---------- Contatti e sede ---------- */
+
+function ContactsPanel() {
+  const qc = useQueryClient();
+  const { data } = useSiteSettings();
+  const [form, setForm] = useState({
+    address: "",
+    phone: "",
+    instagram_handle: "",
+    instagram_url: "",
+    services: "",
+    map_url: "",
+  });
+
+  useEffect(() => {
+    if (data) {
+      setForm({
+        address: data.address,
+        phone: data.phone,
+        instagram_handle: data.instagram_handle,
+        instagram_url: data.instagram_url,
+        services: data.services,
+        map_url: data.map_url,
+      });
+    }
+  }, [data]);
+
+  const save = useMutation({
+    mutationFn: async () => {
+      if (!data) throw new Error("Impostazioni non disponibili");
+      const { error } = await supabase.from("site_settings").update(form).eq("id", data.id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Contatti aggiornati");
+      qc.invalidateQueries({ queryKey: settingsQueryKey });
+    },
+    onError: () => toast.error("Impossibile salvare i contatti"),
+  });
+
+  function field(key: keyof typeof form, label: string) {
+    return (
+      <div>
+        <Label htmlFor={`c-${key}`}>{label}</Label>
+        <Input
+          id={`c-${key}`}
+          value={form[key]}
+          onChange={(e) => setForm((f) => ({ ...f, [key]: e.target.value }))}
+        />
+      </div>
+    );
+  }
+
+  return (
+    <Section title="Contatti e sede della home">
+      <div className="grid gap-4 sm:max-w-xl">
+        {field("address", "Indirizzo")}
+        {field("phone", "Telefono")}
+        {field("instagram_handle", "Nome utente Instagram (senza @)")}
+        {field("instagram_url", "Link al profilo Instagram")}
+        {field("services", "Servizi")}
+        <div>
+          <Label htmlFor="c-map">Link mappa (embed)</Label>
+          <Textarea
+            id="c-map"
+            rows={3}
+            value={form.map_url}
+            onChange={(e) => setForm((f) => ({ ...f, map_url: e.target.value }))}
+          />
+        </div>
+        <Button onClick={() => save.mutate()} disabled={save.isPending}>
+          {save.isPending && <Loader2 className="size-4 animate-spin" />} Salva contatti
+        </Button>
+      </div>
+    </Section>
+  );
+}
+
+/* ---------- Personalizzazione ---------- */
+
+const PRESET_COLORS = ["#e3a53f", "#d94f3d", "#3f8ee3", "#43b581", "#b06ce0", "#e0e0e0"];
+
+function AppearancePanel() {
+  const qc = useQueryClient();
+  const { data } = useSiteSettings();
+  const [color, setColor] = useState("#e3a53f");
+
+  useEffect(() => {
+    if (data?.primary_color) setColor(data.primary_color);
+  }, [data?.primary_color]);
+
+  const save = useMutation({
+    mutationFn: async () => {
+      if (!data) throw new Error("Impostazioni non disponibili");
+      const { error } = await supabase
+        .from("site_settings")
+        .update({ primary_color: color })
+        .eq("id", data.id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Colore aggiornato");
+      qc.invalidateQueries({ queryKey: settingsQueryKey });
+    },
+    onError: () => toast.error("Impossibile salvare il colore"),
+  });
+
+  return (
+    <Section title="Colore principale del sito">
+      <div className="flex flex-wrap items-center gap-3">
+        <input
+          type="color"
+          aria-label="Scegli il colore principale"
+          value={color}
+          onChange={(e) => setColor(e.target.value)}
+          className="size-12 cursor-pointer rounded-lg border border-border bg-transparent"
+        />
+        <Input value={color} onChange={(e) => setColor(e.target.value)} className="w-36" />
+        {PRESET_COLORS.map((c) => (
+          <button
+            key={c}
+            type="button"
+            aria-label={`Colore ${c}`}
+            onClick={() => setColor(c)}
+            style={{ backgroundColor: c }}
+            className="size-8 rounded-full border border-border"
+          />
+        ))}
+      </div>
+      <Button className="mt-5" onClick={() => save.mutate()} disabled={save.isPending}>
+        {save.isPending && <Loader2 className="size-4 animate-spin" />} Salva colore
+      </Button>
     </Section>
   );
 }
