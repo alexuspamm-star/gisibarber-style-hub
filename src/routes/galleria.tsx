@@ -31,7 +31,7 @@ function Galleria() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("site_images")
-        .select("id, url, title")
+        .select("id, url, title, media_type")
         .eq("section", "gallery")
         .order("sort_order");
       if (error) throw error;
@@ -59,7 +59,7 @@ function Galleria() {
     <main className="px-6 pb-24 pt-32">
       <h1 className="display text-5xl sm:text-7xl">Galleria</h1>
       <p className="mt-3 max-w-xl text-muted-foreground">
-        Il repertorio completo. Tocca una foto per ingrandirla.
+        Il repertorio completo. Tocca una foto o un video per ingrandirlo.
       </p>
 
       {isLoading ? (
@@ -74,12 +74,24 @@ function Galleria() {
               onClick={() => setIndex(i)}
               className="mb-4 block w-full overflow-hidden rounded-xl border border-border"
             >
-              <img
-                src={img.url}
-                alt={img.title ?? `Taglio Gisibarber ${i + 1}`}
-                loading="lazy"
-                className="w-full transition-transform duration-500 hover:scale-105"
-              />
+              {img.media_type === "video" ? (
+                <video
+                  src={img.url}
+                  muted
+                  loop
+                  playsInline
+                  autoPlay
+                  preload="metadata"
+                  className="w-full"
+                />
+              ) : (
+                <img
+                  src={img.url}
+                  alt={img.title ?? `Taglio Gisibarber ${i + 1}`}
+                  loading="lazy"
+                  className="w-full transition-transform duration-500 hover:scale-105"
+                />
+              )}
             </button>
           ))}
         </div>
@@ -101,11 +113,22 @@ function Galleria() {
           >
             <ChevronLeft className="size-5" />
           </button>
-          <img
-            src={images[index].url}
-            alt={images[index].title ?? "Taglio Gisibarber"}
-            className="max-h-[85vh] max-w-[85vw] rounded-xl object-contain"
-          />
+          {images[index].media_type === "video" ? (
+            <video
+              src={images[index].url}
+              controls
+              autoPlay
+              loop
+              playsInline
+              className="max-h-[85vh] max-w-[85vw] rounded-xl object-contain"
+            />
+          ) : (
+            <img
+              src={images[index].url}
+              alt={images[index].title ?? "Taglio Gisibarber"}
+              className="max-h-[85vh] max-w-[85vw] rounded-xl object-contain"
+            />
+          )}
           <button
             onClick={next}
             aria-label="Foto successiva"
