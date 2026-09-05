@@ -118,10 +118,10 @@ function Dashboard() {
           <ClosedDaysPanel />
         </TabsContent>
         <TabsContent value="home" className="mt-6">
-          <ImagesPanel section="home" title="Foto della pagina principale" />
+          <ImagesPanel section="home" title="Foto e video della pagina principale" />
         </TabsContent>
         <TabsContent value="galleria" className="mt-6">
-          <ImagesPanel section="gallery" title="Foto della galleria" />
+          <ImagesPanel section="gallery" title="Foto e video della galleria" />
         </TabsContent>
         <TabsContent value="recensioni" className="mt-6">
           <ReviewsPanel />
