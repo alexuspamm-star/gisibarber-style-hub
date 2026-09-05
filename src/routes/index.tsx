@@ -32,6 +32,9 @@ export const Route = createFileRoute("/")({
   component: Home,
 });
 
+export const DEFAULT_TAGLINE =
+  "Fade chirurgici, barba scolpita, attitudine street. Un taglio che parla prima di te.";
+
 function Home() {
   return (
     <main>
@@ -44,6 +47,7 @@ function Home() {
 }
 
 function Hero() {
+  const { data: settings } = useSiteSettings();
   return (
     <section className="relative flex min-h-[92vh] items-center justify-center overflow-hidden">
       <img
@@ -58,7 +62,7 @@ function Hero() {
         <p className="mb-4 text-xs uppercase tracking-[0.5em] text-primary">Barbershop</p>
         <h1 className="display text-[18vw] leading-[0.85] sm:text-[12rem]">GISIBARBER</h1>
         <p className="mx-auto mt-6 max-w-xl text-balance text-muted-foreground">
-          Fade chirurgici, barba scolpita, attitudine street. Un taglio che parla prima di te.
+          {settings?.hero_tagline || DEFAULT_TAGLINE}
         </p>
         <div className="mt-10 flex flex-wrap items-center justify-center gap-3">
           <Button asChild size="lg" className="glow uppercase tracking-widest">
@@ -79,7 +83,7 @@ function Marquee() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("site_images")
-        .select("id, url, title")
+        .select("id, url, title, media_type")
         .eq("section", "home")
         .order("sort_order")
         .limit(10);
@@ -88,8 +92,10 @@ function Marquee() {
     },
   });
 
-  const urls = images?.length ? images.map((i) => i.url) : FALLBACK;
-  const loop = [...urls, ...urls];
+  const media = images?.length
+    ? images.map((i) => ({ url: i.url, media_type: i.media_type }))
+    : FALLBACK.map((url) => ({ url, media_type: "image" }));
+  const loop = [...media, ...media];
 
   return (
     <section className="border-y border-border bg-card/40 py-16">
@@ -101,17 +107,28 @@ function Marquee() {
       </div>
       <div className="overflow-hidden">
         <div className="marquee-track flex w-max gap-4">
-          {loop.map((url, i) => (
+          {loop.map((item, i) => (
             <figure
-              key={`${url}-${i}`}
+              key={`${item.url}-${i}`}
               className="relative h-[22rem] w-[16rem] shrink-0 overflow-hidden rounded-xl border border-border sm:h-[26rem] sm:w-[19rem]"
             >
-              <img
-                src={url}
-                alt={`Taglio realizzato da Gisibarber ${(i % urls.length) + 1}`}
-                loading="lazy"
-                className="size-full object-cover transition-transform duration-700 hover:scale-105"
-              />
+              {item.media_type === "video" ? (
+                <video
+                  src={item.url}
+                  autoPlay
+                  muted
+                  loop
+                  playsInline
+                  className="size-full object-cover"
+                />
+              ) : (
+                <img
+                  src={item.url}
+                  alt={`Taglio realizzato da Gisibarber ${(i % media.length) + 1}`}
+                  loading="lazy"
+                  className="size-full object-cover transition-transform duration-700 hover:scale-105"
+                />
+              )}
             </figure>
           ))}
         </div>
