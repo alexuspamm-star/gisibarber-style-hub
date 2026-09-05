@@ -60,6 +60,19 @@ function Prenota() {
     },
   });
 
+  const { data: blocked } = useQuery({
+    queryKey: ["blocked_slots", date],
+    enabled: !!date,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("blocked_slots")
+        .select("slot")
+        .eq("day", date);
+      if (error) throw error;
+      return data.map((b) => normalizeTime(b.slot as string));
+    },
+  });
+
   const { data: taken, isFetching: loadingSlots } = useQuery({
     queryKey: ["taken_slots", date],
     enabled: !!date,
@@ -77,7 +90,8 @@ function Prenota() {
   const nowLabel = new Date().toTimeString().slice(0, 5);
 
   const isPast = (slot: string) => date === today && slot <= nowLabel;
-  const isTaken = (slot: string) => (taken ?? []).includes(slot);
+  const isTaken = (slot: string) =>
+    (taken ?? []).includes(slot) || (blocked ?? []).includes(slot);
 
   const mutation = useMutation({
     mutationFn: async () => {

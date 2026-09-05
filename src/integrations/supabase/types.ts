@@ -14,6 +14,27 @@ export type Database = {
   }
   public: {
     Tables: {
+      blocked_slots: {
+        Row: {
+          created_at: string
+          day: string
+          id: string
+          slot: string
+        }
+        Insert: {
+          created_at?: string
+          day: string
+          id?: string
+          slot: string
+        }
+        Update: {
+          created_at?: string
+          day?: string
+          id?: string
+          slot?: string
+        }
+        Relationships: []
+      }
       bookings: {
         Row: {
           booking_date: string
@@ -147,6 +168,7 @@ export type Database = {
         Row: {
           address: string
           created_at: string
+          hero_tagline: string
           id: string
           instagram_handle: string
           instagram_url: string
@@ -160,6 +182,7 @@ export type Database = {
         Insert: {
           address?: string
           created_at?: string
+          hero_tagline?: string
           id?: string
           instagram_handle?: string
           instagram_url?: string
@@ -173,6 +196,7 @@ export type Database = {
         Update: {
           address?: string
           created_at?: string
+          hero_tagline?: string
           id?: string
           instagram_handle?: string
           instagram_url?: string

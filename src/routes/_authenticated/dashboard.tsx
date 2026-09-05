@@ -114,13 +114,14 @@ function Dashboard() {
         </TabsContent>
         <TabsContent value="orari" className="mt-6 space-y-6">
           <HoursPanel />
+          <BlockedSlotsPanel />
           <ClosedDaysPanel />
         </TabsContent>
         <TabsContent value="home" className="mt-6">
-          <ImagesPanel section="home" title="Foto della pagina principale" />
+          <ImagesPanel section="home" title="Foto e video della pagina principale" />
         </TabsContent>
         <TabsContent value="galleria" className="mt-6">
-          <ImagesPanel section="gallery" title="Foto della galleria" />
+          <ImagesPanel section="gallery" title="Foto e video della galleria" />
         </TabsContent>
         <TabsContent value="recensioni" className="mt-6">
           <ReviewsPanel />
@@ -456,10 +457,6 @@ function ImagesPanel({ section, title }: { section: "home" | "gallery"; title: s
       for (const file of Array.from(files)) {
         const isVideo = file.type.startsWith("video/");
         if (isVideo) {
-          if (section !== "gallery") {
-            toast.error("I video si possono caricare solo nella galleria");
-            continue;
-          }
           const duration = await getVideoDuration(file);
           if (duration > MAX_VIDEO_SECONDS + 0.5) {
             toast.error(`Il video "${file.name}" supera i ${MAX_VIDEO_SECONDS} secondi`);
@@ -496,17 +493,15 @@ function ImagesPanel({ section, title }: { section: "home" | "gallery"; title: s
         className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-border px-4 py-2"
       >
         {busy ? <Loader2 className="size-4 animate-spin" /> : <Upload className="size-4" />}
-        {section === "gallery" ? "Carica foto o video" : "Carica immagini"}
+        Carica foto o video
       </Label>
-      {section === "gallery" && (
-        <p className="mt-2 text-xs text-muted-foreground">
-          Video brevi ammessi: massimo {MAX_VIDEO_SECONDS} secondi.
-        </p>
-      )}
+      <p className="mt-2 text-xs text-muted-foreground">
+        Video brevi ammessi: massimo {MAX_VIDEO_SECONDS} secondi.
+      </p>
       <input
         id={`upload-${section}`}
         type="file"
-        accept={section === "gallery" ? "image/*,video/*" : "image/*"}
+        accept="image/*,video/*"
         multiple
         className="hidden"
         onChange={(e) => handleFiles(e.target.files)}
@@ -785,29 +780,34 @@ function AppearancePanel() {
   const qc = useQueryClient();
   const { data } = useSiteSettings();
   const [color, setColor] = useState("#e3a53f");
+  const [tagline, setTagline] = useState("");
 
   useEffect(() => {
     if (data?.primary_color) setColor(data.primary_color);
   }, [data?.primary_color]);
+
+  useEffect(() => {
+    if (data?.hero_tagline !== undefined) setTagline(data?.hero_tagline ?? "");
+  }, [data?.hero_tagline]);
 
   const save = useMutation({
     mutationFn: async () => {
       if (!data) throw new Error("Impostazioni non disponibili");
       const { error } = await supabase
         .from("site_settings")
-        .update({ primary_color: color })
+        .update({ primary_color: color, hero_tagline: tagline })
         .eq("id", data.id);
       if (error) throw error;
     },
     onSuccess: () => {
-      toast.success("Colore aggiornato");
+      toast.success("Personalizzazione aggiornata");
       qc.invalidateQueries({ queryKey: settingsQueryKey });
     },
-    onError: () => toast.error("Impossibile salvare il colore"),
+    onError: () => toast.error("Impossibile salvare le modifiche"),
   });
 
   return (
-    <Section title="Colore principale del sito">
+    <Section title="Aspetto della home">
       <div className="flex flex-wrap items-center gap-3">
         <input
           type="color"
@@ -828,9 +828,107 @@ function AppearancePanel() {
           />
         ))}
       </div>
+      <div className="mt-6 sm:max-w-xl">
+        <Label htmlFor="hero-tagline">Frase sotto il nome nella home</Label>
+        <Textarea
+          id="hero-tagline"
+          rows={3}
+          maxLength={200}
+          value={tagline}
+          onChange={(e) => setTagline(e.target.value)}
+        />
+      </div>
       <Button className="mt-5" onClick={() => save.mutate()} disabled={save.isPending}>
-        {save.isPending && <Loader2 className="size-4 animate-spin" />} Salva colore
+        {save.isPending && <Loader2 className="size-4 animate-spin" />} Salva modifiche
       </Button>
+    </Section>
+  );
+}
+
+
+/* ---------- Orari singoli non disponibili ---------- */
+
+function BlockedSlotsPanel() {
+  const qc = useQueryClient();
+  const [day, setDay] = useState("");
+  const [slot, setSlot] = useState("");
+
+  const blocked = useQuery({
+    queryKey: ["blocked_slots"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("blocked_slots")
+        .select("id, day, slot")
+        .order("day")
+        .order("slot");
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const add = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase.from("blocked_slots").insert({ day, slot });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      setSlot("");
+      toast.success("Orario rimosso dalle disponibilità");
+      qc.invalidateQueries({ queryKey: ["blocked_slots"] });
+    },
+    onError: () => toast.error("Impossibile bloccare questo orario"),
+  });
+
+  const remove = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("blocked_slots").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["blocked_slots"] }),
+  });
+
+  return (
+    <Section title="Orari singoli non disponibili">
+      <p className="mb-4 text-sm text-muted-foreground">
+        Togli un orario preciso da un giorno specifico (es. domani alle 16:30): non sarà più
+        prenotabile.
+      </p>
+      <div className="flex flex-wrap items-end gap-3">
+        <div>
+          <Label htmlFor="block-day">Giorno</Label>
+          <Input id="block-day" type="date" value={day} onChange={(e) => setDay(e.target.value)} />
+        </div>
+        <div>
+          <Label htmlFor="block-slot">Orario</Label>
+          <Input id="block-slot" type="time" value={slot} onChange={(e) => setSlot(e.target.value)} />
+        </div>
+        <Button onClick={() => add.mutate()} disabled={!day || !slot || add.isPending}>
+          Rimuovi orario
+        </Button>
+      </div>
+      <ul className="mt-4 space-y-2">
+        {blocked.data?.length === 0 && (
+          <li className="text-sm text-muted-foreground">Nessun orario bloccato.</li>
+        )}
+        {blocked.data?.map((b) => (
+          <li
+            key={b.id}
+            className="flex items-center justify-between rounded-lg border border-border px-3 py-2"
+          >
+            <span>
+              {formatItalianDate(b.day)} — {normalizeTime(b.slot)}
+            </span>
+            <Button
+              variant="ghost"
+              size="icon"
+              aria-label="Rendi di nuovo disponibile"
+              onClick={() => remove.mutate(b.id)}
+            >
+              <Trash2 className="size-4" />
+            </Button>
+          </li>
+        ))}
+      </ul>
     </Section>
   );
 }
