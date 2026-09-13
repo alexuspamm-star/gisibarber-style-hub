@@ -98,7 +98,7 @@ function Dashboard() {
       </header>
 
       <Tabs defaultValue="prenotazioni">
-        <TabsList className="flex flex-wrap">
+        <TabsList className="flex h-auto flex-wrap items-stretch justify-start gap-1">
           <TabsTrigger value="prenotazioni">Prenotazioni</TabsTrigger>
           <TabsTrigger value="orari">Orari</TabsTrigger>
           <TabsTrigger value="home">Foto home</TabsTrigger>
