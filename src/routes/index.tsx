@@ -27,6 +27,8 @@ export const Route = createFileRoute("/")({
         property: "og:description",
         content: "Tagli su misura, fade precisi e cura della barba. Prenota online da Gisilbarber.",
       },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
   component: Home,
@@ -267,11 +269,11 @@ function Contatti() {
           </a>
           <a
             className="flex items-center gap-3 hover:text-primary"
-            href={settings?.instagram_url ?? "https://instagram.com/gisibarber"}
+            href={settings?.instagram_url ?? "https://instagram.com/gisilbarber"}
             target="_blank"
             rel="noreferrer"
           >
-            <Instagram className="size-4 text-primary" /> @{settings?.instagram_handle ?? "gisibarber"}
+            <Instagram className="size-4 text-primary" /> @{settings?.instagram_handle ?? "gisilbarber"}
           </a>
           <p className="flex items-center gap-3">
             <Scissors className="size-4 text-primary" /> {settings?.services ?? "Taglio, fade, barba, rasatura"}

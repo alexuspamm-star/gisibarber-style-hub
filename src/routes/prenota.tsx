@@ -27,6 +27,8 @@ export const Route = createFileRoute("/prenota")({
         property: "og:description",
         content: "Prenotazione online: giorno, orario e il taglio che desideri.",
       },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
   component: Prenota,

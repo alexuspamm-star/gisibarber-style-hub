@@ -18,6 +18,8 @@ export const Route = createFileRoute("/galleria")({
         property: "og:description",
         content: "Sfoglia il repertorio completo dei tagli firmati Gisilbarber.",
       },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
   component: Galleria,

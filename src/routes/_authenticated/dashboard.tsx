@@ -35,6 +35,8 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
       { name: "description", content: "Gestione immagini, orari, recensioni e prenotazioni di Gisilbarber." },
       { property: "og:title", content: "Dashboard — Gisilbarber" },
       { property: "og:description", content: "Gestione immagini, orari, recensioni e prenotazioni di Gisilbarber." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
       { name: "robots", content: "noindex" },
     ],
   }),
