@@ -12,10 +12,10 @@ import { ensureAdmin, usernameToEmail } from "@/lib/admin.functions";
 export const Route = createFileRoute("/login")({
   head: () => ({
     meta: [
-      { title: "Area riservata — Gisibarber" },
-      { name: "description", content: "Accesso riservato alla gestione di Gisibarber." },
-      { property: "og:title", content: "Area riservata — Gisibarber" },
-      { property: "og:description", content: "Accesso riservato alla gestione di Gisibarber." },
+      { title: "Area riservata — Gisilbarber" },
+      { name: "description", content: "Accesso riservato alla gestione di Gisilbarber." },
+      { property: "og:title", content: "Area riservata — Gisilbarber" },
+      { property: "og:description", content: "Accesso riservato alla gestione di Gisilbarber." },
       { name: "robots", content: "noindex" },
     ],
   }),

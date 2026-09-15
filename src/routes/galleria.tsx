@@ -8,15 +8,15 @@ import { supabase } from "@/integrations/supabase/client";
 export const Route = createFileRoute("/galleria")({
   head: () => ({
     meta: [
-      { title: "Galleria — Gisibarber" },
+      { title: "Galleria — Gisilbarber" },
       {
         name: "description",
-        content: "Tutto il repertorio di tagli, fade e barbe realizzati da Gisibarber.",
+        content: "Tutto il repertorio di tagli, fade e barbe realizzati da Gisilbarber.",
       },
-      { property: "og:title", content: "Galleria — Gisibarber" },
+      { property: "og:title", content: "Galleria — Gisilbarber" },
       {
         property: "og:description",
-        content: "Sfoglia il repertorio completo dei tagli firmati Gisibarber.",
+        content: "Sfoglia il repertorio completo dei tagli firmati Gisilbarber.",
       },
     ],
   }),
@@ -87,7 +87,7 @@ function Galleria() {
               ) : (
                 <img
                   src={img.url}
-                  alt={img.title ?? `Taglio Gisibarber ${i + 1}`}
+                  alt={img.title ?? `Taglio Gisilbarber ${i + 1}`}
                   loading="lazy"
                   className="w-full transition-transform duration-500 hover:scale-105"
                 />
@@ -125,7 +125,7 @@ function Galleria() {
           ) : (
             <img
               src={images[index].url}
-              alt={images[index].title ?? "Taglio Gisibarber"}
+              alt={images[index].title ?? "Taglio Gisilbarber"}
               className="max-h-[85vh] max-w-[85vw] rounded-xl object-contain"
             />
           )}

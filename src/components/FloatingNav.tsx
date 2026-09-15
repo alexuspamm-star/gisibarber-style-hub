@@ -29,7 +29,7 @@ export function FloatingNav() {
       <div className="glass pointer-events-auto w-full max-w-md rounded-2xl px-3 py-2 shadow-2xl">
         <div className="flex items-center justify-between gap-2">
           <Link to="/" className="display px-2 text-xl tracking-widest text-primary">
-            GISIBARBER
+            GISILBARBER
           </Link>
 
           <div className="flex items-center gap-1">

@@ -16,13 +16,13 @@ import { buildSlots, normalizeTime, toISODate, WEEKDAYS, type WorkHour } from "@
 export const Route = createFileRoute("/prenota")({
   head: () => ({
     meta: [
-      { title: "Prenota un taglio — Gisibarber" },
+      { title: "Prenota un taglio — Gisilbarber" },
       {
         name: "description",
         content:
-          "Scegli giorno e orario, descrivi il taglio che vuoi e prenota il tuo posto da Gisibarber.",
+          "Scegli giorno e orario, descrivi il taglio che vuoi e prenota il tuo posto da Gisilbarber.",
       },
-      { property: "og:title", content: "Prenota un taglio — Gisibarber" },
+      { property: "og:title", content: "Prenota un taglio — Gisilbarber" },
       {
         property: "og:description",
         content: "Prenotazione online: giorno, orario e il taglio che desideri.",

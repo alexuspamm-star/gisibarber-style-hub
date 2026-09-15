@@ -16,16 +16,16 @@ const FALLBACK = ["/images/cut-1.jpg", "/images/cut-2.jpg", "/images/cut-3.jpg"]
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Gisibarber — Barbershop street & elegante" },
+      { title: "Gisilbarber — Barbershop street & elegante" },
       {
         name: "description",
         content:
-          "Gisibarber: tagli su misura, fade precisi e cura della barba. Guarda i lavori, leggi le recensioni e prenota online.",
+          "Gisilbarber: tagli su misura, fade precisi e cura della barba. Guarda i lavori, leggi le recensioni e prenota online.",
       },
-      { property: "og:title", content: "Gisibarber — Barbershop street & elegante" },
+      { property: "og:title", content: "Gisilbarber — Barbershop street & elegante" },
       {
         property: "og:description",
-        content: "Tagli su misura, fade precisi e cura della barba. Prenota online da Gisibarber.",
+        content: "Tagli su misura, fade precisi e cura della barba. Prenota online da Gisilbarber.",
       },
     ],
   }),
@@ -51,8 +51,8 @@ function Hero() {
   return (
     <section className="relative flex min-h-[92vh] items-center justify-center overflow-hidden">
       <img
-        src="/images/hero.jpg"
-        alt="Interno del barbershop Gisibarber al neon"
+        src={settings?.hero_image_url || "/images/hero.jpg"}
+        alt="Interno del barbershop Gisilbarber"
         width={1920}
         height={1080}
         className="absolute inset-0 size-full object-cover opacity-55"
@@ -60,7 +60,7 @@ function Hero() {
       <div className="fade-bottom absolute inset-0" />
       <div className="relative z-10 px-6 text-center">
         <p className="mb-4 text-xs uppercase tracking-[0.5em] text-primary">Barbershop</p>
-        <h1 className="display text-[18vw] leading-[0.85] sm:text-[12rem]">GISIBARBER</h1>
+        <h1 className="display text-[18vw] leading-[0.85] sm:text-[12rem]">GISILBARBER</h1>
         <p className="mx-auto mt-6 max-w-xl text-balance text-muted-foreground">
           {settings?.hero_tagline || DEFAULT_TAGLINE}
         </p>
@@ -124,7 +124,7 @@ function Marquee() {
               ) : (
                 <img
                   src={item.url}
-                  alt={`Taglio realizzato da Gisibarber ${(i % media.length) + 1}`}
+                  alt={`Taglio realizzato da Gisilbarber ${(i % media.length) + 1}`}
                   loading="lazy"
                   className="size-full object-cover transition-transform duration-700 hover:scale-105"
                 />
@@ -301,7 +301,7 @@ function Contatti() {
 
         <div className="overflow-hidden rounded-xl border border-border">
           <iframe
-            title="Posizione di Gisibarber"
+            title="Posizione di Gisilbarber"
             src={
               settings?.map_url ??
               "https://www.openstreetmap.org/export/embed.html?bbox=9.180%2C45.458%2C9.200%2C45.472&layer=mapnik"
@@ -311,9 +311,18 @@ function Contatti() {
           />
         </div>
       </div>
-      <p className="mt-12 text-center text-xs uppercase tracking-[0.3em] text-muted-foreground">
-        © {new Date().getFullYear()} Gisibarber
-      </p>
+      <div className="mt-12 text-center text-xs uppercase tracking-[0.3em] text-muted-foreground">
+        <p>© {new Date().getFullYear()} Gisilbarber</p>
+        <p className="mt-3">Made by Alexander Marrubbio</p>
+        <a
+          href="https://www.instagram.com/_alex.mrb_/"
+          target="_blank"
+          rel="noreferrer"
+          className="mt-2 inline-flex items-center gap-2 normal-case tracking-normal transition-colors hover:text-primary"
+        >
+          <Instagram className="size-4" /> @_alex.mrb_
+        </a>
+      </div>
     </footer>
   );
 }
