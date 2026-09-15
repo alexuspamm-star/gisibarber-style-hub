@@ -31,10 +31,12 @@ import { formatItalianDate, settingsQueryKey, useSiteSettings } from "@/lib/site
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({
     meta: [
-      { title: "Dashboard — Gisibarber" },
-      { name: "description", content: "Gestione immagini, orari, recensioni e prenotazioni di Gisibarber." },
-      { property: "og:title", content: "Dashboard — Gisibarber" },
-      { property: "og:description", content: "Gestione immagini, orari, recensioni e prenotazioni di Gisibarber." },
+      { title: "Dashboard — Gisilbarber" },
+      { name: "description", content: "Gestione immagini, orari, recensioni e prenotazioni di Gisilbarber." },
+      { property: "og:title", content: "Dashboard — Gisilbarber" },
+      { property: "og:description", content: "Gestione immagini, orari, recensioni e prenotazioni di Gisilbarber." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
       { name: "robots", content: "noindex" },
     ],
   }),
@@ -513,7 +515,7 @@ function ImagesPanel({ section, title }: { section: "home" | "gallery"; title: s
             {img.media_type === "video" ? (
               <video src={img.url} muted loop playsInline controls className="aspect-[3/4] w-full object-cover" />
             ) : (
-              <img src={img.url} alt={img.title ?? "Taglio Gisibarber"} className="aspect-[3/4] w-full object-cover" />
+              <img src={img.url} alt={img.title ?? "Taglio Gisilbarber"} className="aspect-[3/4] w-full object-cover" />
             )}
             <Button
               variant="destructive"
@@ -781,6 +783,8 @@ function AppearancePanel() {
   const { data } = useSiteSettings();
   const [color, setColor] = useState("#e3a53f");
   const [tagline, setTagline] = useState("");
+  const [heroImage, setHeroImage] = useState("/images/hero.jpg");
+  const [imageBusy, setImageBusy] = useState(false);
 
   useEffect(() => {
     if (data?.primary_color) setColor(data.primary_color);
@@ -789,6 +793,30 @@ function AppearancePanel() {
   useEffect(() => {
     if (data?.hero_tagline !== undefined) setTagline(data?.hero_tagline ?? "");
   }, [data?.hero_tagline]);
+
+  useEffect(() => {
+    if (data?.hero_image_url) setHeroImage(data.hero_image_url);
+  }, [data?.hero_image_url]);
+
+  async function changeHeroImage(file: File | undefined) {
+    if (!file || !data) return;
+    setImageBusy(true);
+    try {
+      const url = await uploadMedia(file, "hero");
+      const { error } = await supabase
+        .from("site_settings")
+        .update({ hero_image_url: url })
+        .eq("id", data.id);
+      if (error) throw error;
+      setHeroImage(url);
+      await qc.invalidateQueries({ queryKey: settingsQueryKey });
+      toast.success("Sfondo della home aggiornato");
+    } catch {
+      toast.error("Caricamento dello sfondo non riuscito");
+    } finally {
+      setImageBusy(false);
+    }
+  }
 
   const save = useMutation({
     mutationFn: async () => {
@@ -808,6 +836,35 @@ function AppearancePanel() {
 
   return (
     <Section title="Aspetto della home">
+      <div className="mb-6 sm:max-w-xl">
+        <Label htmlFor="hero-background">Sfondo della home</Label>
+        <div className="mt-2 overflow-hidden rounded-xl border border-border">
+          <img
+            src={heroImage}
+            alt="Anteprima dello sfondo della home"
+            className="aspect-video w-full object-cover"
+          />
+        </div>
+        <Label
+          htmlFor="hero-background"
+          className="mt-3 inline-flex cursor-pointer items-center gap-2 rounded-lg border border-border px-4 py-2"
+        >
+          {imageBusy ? <Loader2 className="size-4 animate-spin" /> : <Upload className="size-4" />}
+          Cambia sfondo
+        </Label>
+        <input
+          id="hero-background"
+          type="file"
+          accept="image/jpeg,image/png,image/webp"
+          className="hidden"
+          disabled={imageBusy}
+          onChange={(e) => changeHeroImage(e.target.files?.[0])}
+        />
+        <p className="mt-2 text-xs text-muted-foreground">
+          Per una resa ottimale usa una foto orizzontale da 1920 × 1080 px, almeno 1600 × 900 px,
+          in formato JPG o WebP. Mantieni il soggetto principale verso il centro.
+        </p>
+      </div>
       <div className="flex flex-wrap items-center gap-3">
         <input
           type="color"

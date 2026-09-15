@@ -168,6 +168,7 @@ export type Database = {
         Row: {
           address: string
           created_at: string
+          hero_image_url: string
           hero_tagline: string
           id: string
           instagram_handle: string
@@ -182,6 +183,7 @@ export type Database = {
         Insert: {
           address?: string
           created_at?: string
+          hero_image_url?: string
           hero_tagline?: string
           id?: string
           instagram_handle?: string
@@ -196,6 +198,7 @@ export type Database = {
         Update: {
           address?: string
           created_at?: string
+          hero_image_url?: string
           hero_tagline?: string
           id?: string
           instagram_handle?: string
