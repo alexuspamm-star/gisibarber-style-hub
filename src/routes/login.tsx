@@ -94,10 +94,6 @@ function LoginPage() {
             {loading && <Loader2 className="mr-2 size-4 animate-spin" />}
             Entra
           </Button>
-          <p className="text-center text-xs text-muted-foreground">
-            Primo accesso: <span className="text-primary">admin</span> /{" "}
-            <span className="text-primary">gisibarber2026</span>
-          </p>
         </div>
       </form>
     </main>

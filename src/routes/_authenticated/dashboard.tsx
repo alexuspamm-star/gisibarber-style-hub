@@ -193,83 +193,112 @@ function BookingsPanel() {
     onError: () => toast.error("Impossibile cancellare la prenotazione"),
   });
 
+  const todayRome = new Date().toLocaleDateString("en-CA", { timeZone: "Europe/Rome" });
+  const all = bookings.data ?? [];
+  const upcoming = all.filter((b) => b.booking_date >= todayRome);
+  const expired = all
+    .filter((b) => b.booking_date < todayRome)
+    .sort((a, b) =>
+      b.booking_date === a.booking_date
+        ? b.booking_time.localeCompare(a.booking_time)
+        : b.booking_date.localeCompare(a.booking_date),
+    );
+
+  function renderBooking(b: (typeof all)[number]) {
+    return (
+      <li key={b.id} className="rounded-xl border border-border p-4">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <p className="display text-xl">{b.customer_name}</p>
+            <p className="text-sm text-muted-foreground">{b.phone}</p>
+            {b.description && <p className="mt-2 text-sm">{b.description}</p>}
+            {b.image_url && (
+              <a href={b.image_url} target="_blank" rel="noreferrer">
+                <img
+                  src={b.image_url}
+                  alt={`Riferimento taglio di ${b.customer_name}`}
+                  className="mt-3 size-24 rounded-lg object-cover"
+                />
+              </a>
+            )}
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <Input
+              type="date"
+              className="w-40"
+              defaultValue={b.booking_date}
+              onChange={(e) =>
+                update.mutate({
+                  id: b.id,
+                  booking_date: e.target.value,
+                  booking_time: normalizeTime(b.booking_time),
+                })
+              }
+            />
+            <Input
+              type="time"
+              className="w-32"
+              defaultValue={normalizeTime(b.booking_time)}
+              onChange={(e) =>
+                update.mutate({
+                  id: b.id,
+                  booking_date: b.booking_date,
+                  booking_time: e.target.value,
+                })
+              }
+            />
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="destructive" size="icon" aria-label="Cancella prenotazione">
+                  <Trash2 className="size-4" />
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Cancellare la prenotazione?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Stai per cancellare la prenotazione di {b.customer_name} del{" "}
+                    {formatItalianDate(b.booking_date)} alle {normalizeTime(b.booking_time)}.
+                    L'operazione non può essere annullata.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Annulla</AlertDialogCancel>
+                  <AlertDialogAction onClick={() => remove.mutate(b.id)}>
+                    Sì, cancella
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </div>
+        </div>
+      </li>
+    );
+  }
+
   return (
     <Section title="Prenotazioni">
       {bookings.isLoading && <Loader2 className="size-5 animate-spin text-primary" />}
-      {bookings.data?.length === 0 && (
+      {all.length === 0 && !bookings.isLoading && (
         <p className="text-muted-foreground">Nessuna prenotazione al momento.</p>
       )}
-      <ul className="space-y-4">
-        {bookings.data?.map((b) => (
-          <li key={b.id} className="rounded-xl border border-border p-4">
-            <div className="flex flex-wrap items-start justify-between gap-3">
-              <div>
-                <p className="display text-xl">{b.customer_name}</p>
-                <p className="text-sm text-muted-foreground">{b.phone}</p>
-                {b.description && <p className="mt-2 text-sm">{b.description}</p>}
-                {b.image_url && (
-                  <a href={b.image_url} target="_blank" rel="noreferrer">
-                    <img
-                      src={b.image_url}
-                      alt={`Riferimento taglio di ${b.customer_name}`}
-                      className="mt-3 size-24 rounded-lg object-cover"
-                    />
-                  </a>
-                )}
-              </div>
-              <div className="flex flex-wrap items-center gap-2">
-                <Input
-                  type="date"
-                  className="w-40"
-                  defaultValue={b.booking_date}
-                  onChange={(e) =>
-                    update.mutate({
-                      id: b.id,
-                      booking_date: e.target.value,
-                      booking_time: normalizeTime(b.booking_time),
-                    })
-                  }
-                />
-                <Input
-                  type="time"
-                  className="w-32"
-                  defaultValue={normalizeTime(b.booking_time)}
-                  onChange={(e) =>
-                    update.mutate({
-                      id: b.id,
-                      booking_date: b.booking_date,
-                      booking_time: e.target.value,
-                    })
-                  }
-                />
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <Button variant="destructive" size="icon" aria-label="Cancella prenotazione">
-                      <Trash2 className="size-4" />
-                    </Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>Cancellare la prenotazione?</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        Stai per cancellare la prenotazione di {b.customer_name} del{" "}
-                        {formatItalianDate(b.booking_date)} alle {normalizeTime(b.booking_time)}.
-                        L'operazione non può essere annullata.
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>Annulla</AlertDialogCancel>
-                      <AlertDialogAction onClick={() => remove.mutate(b.id)}>
-                        Sì, cancella
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
-              </div>
-            </div>
-          </li>
-        ))}
-      </ul>
+
+      {upcoming.length > 0 && (
+        <div>
+          <h3 className="display text-2xl text-primary">In programma</h3>
+          <ul className="mt-4 space-y-4">{upcoming.map(renderBooking)}</ul>
+        </div>
+      )}
+
+      {expired.length > 0 && (
+        <div className="mt-8">
+          <h3 className="display text-2xl text-muted-foreground">Scadute</h3>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Prenotazioni con data già passata.
+          </p>
+          <ul className="mt-4 space-y-4 opacity-70">{expired.map(renderBooking)}</ul>
+        </div>
+      )}
     </Section>
   );
 }
