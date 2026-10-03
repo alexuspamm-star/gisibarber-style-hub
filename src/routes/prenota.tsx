@@ -267,6 +267,40 @@ function Prenota() {
           />
         </div>
 
+        <div className="space-y-3 rounded-lg border border-border p-4">
+          <label className="flex cursor-pointer items-center gap-3">
+            <input
+              type="checkbox"
+              checked={withProduct}
+              onChange={(e) => {
+                setWithProduct(e.target.checked);
+                if (!e.target.checked) setProduct("");
+              }}
+              className="size-4 accent-[var(--primary)]"
+            />
+            <span className="text-sm font-medium">
+              Taglio + prodotto <span className="text-primary">25€</span>
+            </span>
+          </label>
+          <p className="text-xs text-muted-foreground">
+            Aggiungi un prodotto H14 al tuo taglio: lo ritiri e lo paghi in negozio.
+          </p>
+          {withProduct && (
+            <select
+              value={product}
+              onChange={(e) => setProduct(e.target.value)}
+              className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary"
+            >
+              <option value="">Scegli il prodotto…</option>
+              {(products ?? []).map((p) => (
+                <option key={p.id} value={p.name}>
+                  {p.name}
+                </option>
+              ))}
+            </select>
+          )}
+        </div>
+
         <div className="space-y-2">
           <Label htmlFor="photo">Foto di riferimento (facoltativa)</Label>
           <label
