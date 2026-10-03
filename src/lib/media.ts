@@ -25,7 +25,7 @@ export function getVideoDuration(file: File) {
 /** Uploads a file to the media bucket and returns a long-lived signed URL. */
 export async function uploadMedia(
   file: File,
-  folder: "home" | "gallery" | "bookings" | "avatars" | "hero",
+  folder: "home" | "gallery" | "bookings" | "avatars" | "hero" | "products",
 ) {
   const ext = file.name.split(".").pop() ?? "jpg";
   const path = `${folder}/${crypto.randomUUID()}.${ext}`;

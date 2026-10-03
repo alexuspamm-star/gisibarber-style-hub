@@ -105,6 +105,7 @@ function Dashboard() {
           <TabsTrigger value="orari">Orari</TabsTrigger>
           <TabsTrigger value="home">Foto home</TabsTrigger>
           <TabsTrigger value="galleria">Galleria</TabsTrigger>
+          <TabsTrigger value="prodotti">Prodotti</TabsTrigger>
           <TabsTrigger value="recensioni">Recensioni</TabsTrigger>
           <TabsTrigger value="contatti">Contatti</TabsTrigger>
           <TabsTrigger value="personalizzazione">Personalizzazione</TabsTrigger>
@@ -124,6 +125,9 @@ function Dashboard() {
         </TabsContent>
         <TabsContent value="galleria" className="mt-6">
           <ImagesPanel section="gallery" title="Foto e video della galleria" />
+        </TabsContent>
+        <TabsContent value="prodotti" className="mt-6">
+          <ProductsPanel />
         </TabsContent>
         <TabsContent value="recensioni" className="mt-6">
           <ReviewsPanel />
@@ -558,6 +562,131 @@ function ImagesPanel({ section, title }: { section: "home" | "gallery"; title: s
         ))}
       </div>
     </Section>
+  );
+}
+
+/* ---------- Prodotti ---------- */
+
+type Product = {
+  id: string;
+  name: string;
+  description: string | null;
+  price: number | null;
+  image_url: string | null;
+  available: boolean;
+  sort_order: number;
+};
+
+function ProductsPanel() {
+  const qc = useQueryClient();
+  const products = useQuery({
+    queryKey: ["products", "admin"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("products").select("*").order("sort_order");
+      if (error) throw error;
+      return data as Product[];
+    },
+  });
+  const refresh = () => {
+    qc.invalidateQueries({ queryKey: ["products"] });
+  };
+
+  async function add() {
+    const order = (products.data?.length ?? 0) + 1;
+    const { error } = await supabase.from("products").insert({ name: "Nuovo prodotto", sort_order: order });
+    if (error) return toast.error("Impossibile aggiungere il prodotto");
+    refresh();
+  }
+
+  return (
+    <Section title="Prodotti in vetrina">
+      <p className="mb-4 text-sm text-muted-foreground">
+        I prodotti sono solo in esposizione: i clienti li acquistano in negozio. Il prezzo è facoltativo.
+      </p>
+      <Button onClick={add}>Aggiungi prodotto</Button>
+      <div className="mt-6 space-y-4">
+        {products.data?.map((p) => (
+          <ProductRow key={p.id} product={p} onChange={refresh} />
+        ))}
+      </div>
+    </Section>
+  );
+}
+
+function ProductRow({ product, onChange }: { product: Product; onChange: () => void }) {
+  const [name, setName] = useState(product.name);
+  const [description, setDescription] = useState(product.description ?? "");
+  const [price, setPrice] = useState(product.price != null ? String(product.price) : "");
+  const [busy, setBusy] = useState(false);
+
+  async function update(values: Partial<Product>) {
+    setBusy(true);
+    const { error } = await supabase.from("products").update(values).eq("id", product.id);
+    setBusy(false);
+    if (error) toast.error("Salvataggio non riuscito");
+    else {
+      toast.success("Prodotto aggiornato");
+      onChange();
+    }
+  }
+
+  function save() {
+    const trimmed = price.trim().replace(",", ".");
+    const parsed = trimmed === "" ? null : Number(trimmed);
+    if (parsed !== null && (Number.isNaN(parsed) || parsed < 0)) return toast.error("Prezzo non valido");
+    if (!name.trim()) return toast.error("Inserisci un nome");
+    update({ name: name.trim(), description: description.trim() || null, price: parsed });
+  }
+
+  async function changeImage(file: File | undefined) {
+    if (!file) return;
+    setBusy(true);
+    try {
+      const url = await uploadMedia(file, "products");
+      await update({ image_url: url });
+    } catch {
+      toast.error("Caricamento non riuscito");
+      setBusy(false);
+    }
+  }
+
+  async function remove() {
+    if (!confirm(`Eliminare "${product.name}"?`)) return;
+    const { error } = await supabase.from("products").delete().eq("id", product.id);
+    if (error) toast.error("Eliminazione non riuscita");
+    else onChange();
+  }
+
+  return (
+    <div className="flex flex-col gap-4 rounded-xl border border-border p-4 sm:flex-row">
+      <label className="relative grid size-28 shrink-0 cursor-pointer place-items-center overflow-hidden rounded-lg bg-secondary text-xs text-muted-foreground">
+        {product.image_url ? (
+          <img src={product.image_url} alt={product.name} className="size-full object-cover" />
+        ) : (
+          <span className="flex flex-col items-center gap-1"><Upload className="size-4" />Foto</span>
+        )}
+        <input type="file" accept="image/*" className="hidden" onChange={(e) => changeImage(e.target.files?.[0])} />
+      </label>
+      <div className="flex-1 space-y-2">
+        <div className="grid gap-2 sm:grid-cols-[1fr_8rem]">
+          <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Nome" />
+          <Input value={price} onChange={(e) => setPrice(e.target.value)} placeholder="Prezzo €" inputMode="decimal" />
+        </div>
+        <Textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Descrizione" rows={2} />
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="flex items-center gap-2">
+            <Switch checked={product.available} onCheckedChange={(v) => update({ available: v })} />
+            <span className="text-sm">{product.available ? "Disponibile" : "Esaurito"}</span>
+          </div>
+          <Button size="sm" onClick={save} disabled={busy}>
+            {busy && <Loader2 className="size-4 animate-spin" />}Salva
+          </Button>
+          <Button size="sm" variant="destructive" onClick={remove}>
+            <Trash2 className="size-4" />
+          </Button>
+        </div>
+      </div>
+    </div>
   );
 }
 
