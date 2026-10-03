@@ -156,6 +156,8 @@ function Prenota() {
                 setPhone("");
                 setDescription("");
                 setFile(null);
+                setWithProduct(false);
+                setProduct("");
               }}
             >
               Nuova prenotazione
