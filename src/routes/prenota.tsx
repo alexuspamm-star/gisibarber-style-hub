@@ -42,7 +42,22 @@ function Prenota() {
   const [phone, setPhone] = useState("");
   const [description, setDescription] = useState("");
   const [file, setFile] = useState<File | null>(null);
+  const [withProduct, setWithProduct] = useState(false);
+  const [product, setProduct] = useState("");
   const [done, setDone] = useState(false);
+
+  const { data: products } = useQuery({
+    queryKey: ["products"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("products")
+        .select("id, name")
+        .eq("available", true)
+        .order("sort_order");
+      if (error) throw error;
+      return data;
+    },
+  });
 
   const { data: hours } = useQuery({
     queryKey: ["work_hours"],
@@ -107,6 +122,7 @@ function Prenota() {
         phone: phone.trim(),
         description: description.trim() || null,
         image_url: imageUrl,
+        product_name: withProduct && product ? product : null,
       });
       if (error) throw error;
     },
