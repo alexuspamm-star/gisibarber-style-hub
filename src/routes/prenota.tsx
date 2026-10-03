@@ -42,7 +42,22 @@ function Prenota() {
   const [phone, setPhone] = useState("");
   const [description, setDescription] = useState("");
   const [file, setFile] = useState<File | null>(null);
+  const [withProduct, setWithProduct] = useState(false);
+  const [product, setProduct] = useState("");
   const [done, setDone] = useState(false);
+
+  const { data: products } = useQuery({
+    queryKey: ["products"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("products")
+        .select("id, name")
+        .eq("available", true)
+        .order("sort_order");
+      if (error) throw error;
+      return data;
+    },
+  });
 
   const { data: hours } = useQuery({
     queryKey: ["work_hours"],
@@ -107,6 +122,7 @@ function Prenota() {
         phone: phone.trim(),
         description: description.trim() || null,
         image_url: imageUrl,
+        product_name: withProduct && product ? product : null,
       });
       if (error) throw error;
     },
@@ -140,6 +156,8 @@ function Prenota() {
                 setPhone("");
                 setDescription("");
                 setFile(null);
+                setWithProduct(false);
+                setProduct("");
               }}
             >
               Nuova prenotazione
@@ -249,6 +267,40 @@ function Prenota() {
             onChange={(e) => setDescription(e.target.value)}
             placeholder="Es. fade basso, sfumatura sfumata sui lati, barba corta…"
           />
+        </div>
+
+        <div className="space-y-3 rounded-lg border border-border p-4">
+          <label className="flex cursor-pointer items-center gap-3">
+            <input
+              type="checkbox"
+              checked={withProduct}
+              onChange={(e) => {
+                setWithProduct(e.target.checked);
+                if (!e.target.checked) setProduct("");
+              }}
+              className="size-4 accent-[var(--primary)]"
+            />
+            <span className="text-sm font-medium">
+              Taglio + prodotto <span className="text-primary">25€</span>
+            </span>
+          </label>
+          <p className="text-xs text-muted-foreground">
+            Aggiungi un prodotto H14 al tuo taglio: lo ritiri e lo paghi in negozio.
+          </p>
+          {withProduct && (
+            <select
+              value={product}
+              onChange={(e) => setProduct(e.target.value)}
+              className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary"
+            >
+              <option value="">Scegli il prodotto…</option>
+              {(products ?? []).map((p) => (
+                <option key={p.id} value={p.name}>
+                  {p.name}
+                </option>
+              ))}
+            </select>
+          )}
         </div>
 
         <div className="space-y-2">

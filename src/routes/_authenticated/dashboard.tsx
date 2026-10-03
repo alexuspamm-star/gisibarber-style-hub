@@ -216,6 +216,11 @@ function BookingsPanel() {
             <p className="display text-xl">{b.customer_name}</p>
             <p className="text-sm text-muted-foreground">{b.phone}</p>
             {b.description && <p className="mt-2 text-sm">{b.description}</p>}
+            {b.product_name && (
+              <p className="mt-2 inline-block rounded-full border border-primary/40 bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
+                Taglio + prodotto 25€ · {b.product_name}
+              </p>
+            )}
             {b.image_url && (
               <a href={b.image_url} target="_blank" rel="noreferrer">
                 <img
