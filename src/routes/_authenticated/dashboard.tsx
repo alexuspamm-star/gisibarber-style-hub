@@ -594,7 +594,10 @@ function ProductsPanel() {
   async function add() {
     const order = (products.data?.length ?? 0) + 1;
     const { error } = await supabase.from("products").insert({ name: "Nuovo prodotto", sort_order: order });
-    if (error) return toast.error("Impossibile aggiungere il prodotto");
+    if (error) {
+      toast.error("Impossibile aggiungere il prodotto");
+      return;
+    }
     refresh();
   }
 
@@ -633,8 +636,14 @@ function ProductRow({ product, onChange }: { product: Product; onChange: () => v
   function save() {
     const trimmed = price.trim().replace(",", ".");
     const parsed = trimmed === "" ? null : Number(trimmed);
-    if (parsed !== null && (Number.isNaN(parsed) || parsed < 0)) return toast.error("Prezzo non valido");
-    if (!name.trim()) return toast.error("Inserisci un nome");
+    if (parsed !== null && (Number.isNaN(parsed) || parsed < 0)) {
+      toast.error("Prezzo non valido");
+      return;
+    }
+    if (!name.trim()) {
+      toast.error("Inserisci un nome");
+      return;
+    }
     update({ name: name.trim(), description: description.trim() || null, price: parsed });
   }
 
