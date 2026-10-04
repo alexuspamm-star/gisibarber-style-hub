@@ -2,7 +2,44 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
-import { ImagePlus, Loader2, CheckCircle2, Home } from "lucide-react";
+import { ImagePlus, Loader2, CheckCircle2, Home, CalendarPlus } from "lucide-react";
+
+function addToCalendar(date: string, time: string) {
+  const start = `${date.replaceAll("-", "")}T${time.replace(":", "")}00`;
+  const end = new Date(`${date}T${time}:00`);
+  end.setMinutes(end.getMinutes() + 30);
+  const p = (n: number) => String(n).padStart(2, "0");
+  const endStr = `${end.getFullYear()}${p(end.getMonth() + 1)}${p(end.getDate())}T${p(end.getHours())}${p(end.getMinutes())}00`;
+  const isAndroid = /android/i.test(navigator.userAgent);
+  if (isAndroid) {
+    const url = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=Barbiere&dates=${start}/${endStr}&ctz=Europe/Rome&location=Gisilbarber`;
+    window.open(url, "_blank");
+    return;
+  }
+  const ics = [
+    "BEGIN:VCALENDAR",
+    "VERSION:2.0",
+    "PRODID:-//Gisilbarber//Prenotazione//IT",
+    "BEGIN:VEVENT",
+    `UID:${crypto.randomUUID()}@gisilbarber`,
+    `DTSTAMP:${new Date().toISOString().replace(/[-:]/g, "").split(".")[0]}Z`,
+    `DTSTART;TZID=Europe/Rome:${start}`,
+    `DTEND;TZID=Europe/Rome:${endStr}`,
+    "SUMMARY:Barbiere",
+    "LOCATION:Gisilbarber",
+    "END:VEVENT",
+    "END:VCALENDAR",
+  ].join("\r\n");
+  const blob = new Blob([ics], { type: "text/calendar;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "barbiere.ics";
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
 
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -146,6 +183,13 @@ function Prenota() {
             {formatItalianDate(date)} alle {time}.
           </p>
           <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+            <Button
+              variant="secondary"
+              className="uppercase tracking-widest"
+              onClick={() => addToCalendar(date, time)}
+            >
+              <CalendarPlus className="size-4" /> Aggiungi al Calendario
+            </Button>
             <Button
               className="uppercase tracking-widest"
               onClick={() => {
