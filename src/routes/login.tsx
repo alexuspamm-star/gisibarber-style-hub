@@ -12,10 +12,12 @@ import { ensureAdmin, usernameToEmail } from "@/lib/admin.functions";
 export const Route = createFileRoute("/login")({
   head: () => ({
     meta: [
-      { title: "Area riservata — Gisibarber" },
-      { name: "description", content: "Accesso riservato alla gestione di Gisibarber." },
-      { property: "og:title", content: "Area riservata — Gisibarber" },
-      { property: "og:description", content: "Accesso riservato alla gestione di Gisibarber." },
+      { title: "Area riservata — Gisilbarber" },
+      { name: "description", content: "Accesso riservato alla gestione di Gisilbarber." },
+      { property: "og:title", content: "Area riservata — Gisilbarber" },
+      { property: "og:description", content: "Accesso riservato alla gestione di Gisilbarber." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
       { name: "robots", content: "noindex" },
     ],
   }),
@@ -92,10 +94,6 @@ function LoginPage() {
             {loading && <Loader2 className="mr-2 size-4 animate-spin" />}
             Entra
           </Button>
-          <p className="text-center text-xs text-muted-foreground">
-            Primo accesso: <span className="text-primary">admin</span> /{" "}
-            <span className="text-primary">gisibarber2026</span>
-          </p>
         </div>
       </form>
     </main>

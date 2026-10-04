@@ -31,10 +31,12 @@ import { formatItalianDate, settingsQueryKey, useSiteSettings } from "@/lib/site
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({
     meta: [
-      { title: "Dashboard — Gisibarber" },
-      { name: "description", content: "Gestione immagini, orari, recensioni e prenotazioni di Gisibarber." },
-      { property: "og:title", content: "Dashboard — Gisibarber" },
-      { property: "og:description", content: "Gestione immagini, orari, recensioni e prenotazioni di Gisibarber." },
+      { title: "Dashboard — Gisilbarber" },
+      { name: "description", content: "Gestione immagini, orari, recensioni e prenotazioni di Gisilbarber." },
+      { property: "og:title", content: "Dashboard — Gisilbarber" },
+      { property: "og:description", content: "Gestione immagini, orari, recensioni e prenotazioni di Gisilbarber." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
       { name: "robots", content: "noindex" },
     ],
   }),
@@ -103,6 +105,7 @@ function Dashboard() {
           <TabsTrigger value="orari">Orari</TabsTrigger>
           <TabsTrigger value="home">Foto home</TabsTrigger>
           <TabsTrigger value="galleria">Galleria</TabsTrigger>
+          <TabsTrigger value="prodotti">Prodotti</TabsTrigger>
           <TabsTrigger value="recensioni">Recensioni</TabsTrigger>
           <TabsTrigger value="contatti">Contatti</TabsTrigger>
           <TabsTrigger value="personalizzazione">Personalizzazione</TabsTrigger>
@@ -122,6 +125,9 @@ function Dashboard() {
         </TabsContent>
         <TabsContent value="galleria" className="mt-6">
           <ImagesPanel section="gallery" title="Foto e video della galleria" />
+        </TabsContent>
+        <TabsContent value="prodotti" className="mt-6">
+          <ProductsPanel />
         </TabsContent>
         <TabsContent value="recensioni" className="mt-6">
           <ReviewsPanel />
@@ -191,83 +197,117 @@ function BookingsPanel() {
     onError: () => toast.error("Impossibile cancellare la prenotazione"),
   });
 
+  const todayRome = new Date().toLocaleDateString("en-CA", { timeZone: "Europe/Rome" });
+  const all = bookings.data ?? [];
+  const upcoming = all.filter((b) => b.booking_date >= todayRome);
+  const expired = all
+    .filter((b) => b.booking_date < todayRome)
+    .sort((a, b) =>
+      b.booking_date === a.booking_date
+        ? b.booking_time.localeCompare(a.booking_time)
+        : b.booking_date.localeCompare(a.booking_date),
+    );
+
+  function renderBooking(b: (typeof all)[number]) {
+    return (
+      <li key={b.id} className="rounded-xl border border-border p-4">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <p className="display text-xl">{b.customer_name}</p>
+            <p className="text-sm text-muted-foreground">{b.phone}</p>
+            {b.description && <p className="mt-2 text-sm">{b.description}</p>}
+            {b.product_name && (
+              <p className="mt-2 inline-block rounded-full border border-primary/40 bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
+                Taglio + prodotto 25€ · {b.product_name}
+              </p>
+            )}
+            {b.image_url && (
+              <a href={b.image_url} target="_blank" rel="noreferrer">
+                <img
+                  src={b.image_url}
+                  alt={`Riferimento taglio di ${b.customer_name}`}
+                  className="mt-3 size-24 rounded-lg object-cover"
+                />
+              </a>
+            )}
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <Input
+              type="date"
+              className="w-40"
+              defaultValue={b.booking_date}
+              onChange={(e) =>
+                update.mutate({
+                  id: b.id,
+                  booking_date: e.target.value,
+                  booking_time: normalizeTime(b.booking_time),
+                })
+              }
+            />
+            <Input
+              type="time"
+              className="w-32"
+              defaultValue={normalizeTime(b.booking_time)}
+              onChange={(e) =>
+                update.mutate({
+                  id: b.id,
+                  booking_date: b.booking_date,
+                  booking_time: e.target.value,
+                })
+              }
+            />
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="destructive" size="icon" aria-label="Cancella prenotazione">
+                  <Trash2 className="size-4" />
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Cancellare la prenotazione?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Stai per cancellare la prenotazione di {b.customer_name} del{" "}
+                    {formatItalianDate(b.booking_date)} alle {normalizeTime(b.booking_time)}.
+                    L'operazione non può essere annullata.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Annulla</AlertDialogCancel>
+                  <AlertDialogAction onClick={() => remove.mutate(b.id)}>
+                    Sì, cancella
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </div>
+        </div>
+      </li>
+    );
+  }
+
   return (
     <Section title="Prenotazioni">
       {bookings.isLoading && <Loader2 className="size-5 animate-spin text-primary" />}
-      {bookings.data?.length === 0 && (
+      {all.length === 0 && !bookings.isLoading && (
         <p className="text-muted-foreground">Nessuna prenotazione al momento.</p>
       )}
-      <ul className="space-y-4">
-        {bookings.data?.map((b) => (
-          <li key={b.id} className="rounded-xl border border-border p-4">
-            <div className="flex flex-wrap items-start justify-between gap-3">
-              <div>
-                <p className="display text-xl">{b.customer_name}</p>
-                <p className="text-sm text-muted-foreground">{b.phone}</p>
-                {b.description && <p className="mt-2 text-sm">{b.description}</p>}
-                {b.image_url && (
-                  <a href={b.image_url} target="_blank" rel="noreferrer">
-                    <img
-                      src={b.image_url}
-                      alt={`Riferimento taglio di ${b.customer_name}`}
-                      className="mt-3 size-24 rounded-lg object-cover"
-                    />
-                  </a>
-                )}
-              </div>
-              <div className="flex flex-wrap items-center gap-2">
-                <Input
-                  type="date"
-                  className="w-40"
-                  defaultValue={b.booking_date}
-                  onChange={(e) =>
-                    update.mutate({
-                      id: b.id,
-                      booking_date: e.target.value,
-                      booking_time: normalizeTime(b.booking_time),
-                    })
-                  }
-                />
-                <Input
-                  type="time"
-                  className="w-32"
-                  defaultValue={normalizeTime(b.booking_time)}
-                  onChange={(e) =>
-                    update.mutate({
-                      id: b.id,
-                      booking_date: b.booking_date,
-                      booking_time: e.target.value,
-                    })
-                  }
-                />
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <Button variant="destructive" size="icon" aria-label="Cancella prenotazione">
-                      <Trash2 className="size-4" />
-                    </Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>Cancellare la prenotazione?</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        Stai per cancellare la prenotazione di {b.customer_name} del{" "}
-                        {formatItalianDate(b.booking_date)} alle {normalizeTime(b.booking_time)}.
-                        L'operazione non può essere annullata.
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>Annulla</AlertDialogCancel>
-                      <AlertDialogAction onClick={() => remove.mutate(b.id)}>
-                        Sì, cancella
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
-              </div>
-            </div>
-          </li>
-        ))}
-      </ul>
+
+      {upcoming.length > 0 && (
+        <div>
+          <h3 className="display text-2xl text-primary">In programma</h3>
+          <ul className="mt-4 space-y-4">{upcoming.map(renderBooking)}</ul>
+        </div>
+      )}
+
+      {expired.length > 0 && (
+        <div className="mt-8">
+          <h3 className="display text-2xl text-muted-foreground">Scadute</h3>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Prenotazioni con data già passata.
+          </p>
+          <ul className="mt-4 space-y-4 opacity-70">{expired.map(renderBooking)}</ul>
+        </div>
+      )}
     </Section>
   );
 }
@@ -513,7 +553,7 @@ function ImagesPanel({ section, title }: { section: "home" | "gallery"; title: s
             {img.media_type === "video" ? (
               <video src={img.url} muted loop playsInline controls className="aspect-[3/4] w-full object-cover" />
             ) : (
-              <img src={img.url} alt={img.title ?? "Taglio Gisibarber"} className="aspect-[3/4] w-full object-cover" />
+              <img src={img.url} alt={img.title ?? "Taglio Gisilbarber"} className="aspect-[3/4] w-full object-cover" />
             )}
             <Button
               variant="destructive"
@@ -527,6 +567,140 @@ function ImagesPanel({ section, title }: { section: "home" | "gallery"; title: s
         ))}
       </div>
     </Section>
+  );
+}
+
+/* ---------- Prodotti ---------- */
+
+type Product = {
+  id: string;
+  name: string;
+  description: string | null;
+  price: number | null;
+  image_url: string | null;
+  available: boolean;
+  sort_order: number;
+};
+
+function ProductsPanel() {
+  const qc = useQueryClient();
+  const products = useQuery({
+    queryKey: ["products", "admin"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("products").select("*").order("sort_order");
+      if (error) throw error;
+      return data as Product[];
+    },
+  });
+  const refresh = () => {
+    qc.invalidateQueries({ queryKey: ["products"] });
+  };
+
+  async function add() {
+    const order = (products.data?.length ?? 0) + 1;
+    const { error } = await supabase.from("products").insert({ name: "Nuovo prodotto", sort_order: order });
+    if (error) {
+      toast.error("Impossibile aggiungere il prodotto");
+      return;
+    }
+    refresh();
+  }
+
+  return (
+    <Section title="Prodotti in vetrina">
+      <p className="mb-4 text-sm text-muted-foreground">
+        I prodotti sono solo in esposizione: i clienti li acquistano in negozio. Il prezzo è facoltativo.
+      </p>
+      <Button onClick={add}>Aggiungi prodotto</Button>
+      <div className="mt-6 space-y-4">
+        {products.data?.map((p) => (
+          <ProductRow key={p.id} product={p} onChange={refresh} />
+        ))}
+      </div>
+    </Section>
+  );
+}
+
+function ProductRow({ product, onChange }: { product: Product; onChange: () => void }) {
+  const [name, setName] = useState(product.name);
+  const [description, setDescription] = useState(product.description ?? "");
+  const [price, setPrice] = useState(product.price != null ? String(product.price) : "");
+  const [busy, setBusy] = useState(false);
+
+  async function update(values: Partial<Product>) {
+    setBusy(true);
+    const { error } = await supabase.from("products").update(values).eq("id", product.id);
+    setBusy(false);
+    if (error) toast.error("Salvataggio non riuscito");
+    else {
+      toast.success("Prodotto aggiornato");
+      onChange();
+    }
+  }
+
+  function save() {
+    const trimmed = price.trim().replace(",", ".");
+    const parsed = trimmed === "" ? null : Number(trimmed);
+    if (parsed !== null && (Number.isNaN(parsed) || parsed < 0)) {
+      toast.error("Prezzo non valido");
+      return;
+    }
+    if (!name.trim()) {
+      toast.error("Inserisci un nome");
+      return;
+    }
+    update({ name: name.trim(), description: description.trim() || null, price: parsed });
+  }
+
+  async function changeImage(file: File | undefined) {
+    if (!file) return;
+    setBusy(true);
+    try {
+      const url = await uploadMedia(file, "products");
+      await update({ image_url: url });
+    } catch {
+      toast.error("Caricamento non riuscito");
+      setBusy(false);
+    }
+  }
+
+  async function remove() {
+    if (!confirm(`Eliminare "${product.name}"?`)) return;
+    const { error } = await supabase.from("products").delete().eq("id", product.id);
+    if (error) toast.error("Eliminazione non riuscita");
+    else onChange();
+  }
+
+  return (
+    <div className="flex flex-col gap-4 rounded-xl border border-border p-4 sm:flex-row">
+      <label className="relative grid size-28 shrink-0 cursor-pointer place-items-center overflow-hidden rounded-lg bg-secondary text-xs text-muted-foreground">
+        {product.image_url ? (
+          <img src={product.image_url} alt={product.name} className="size-full object-cover" />
+        ) : (
+          <span className="flex flex-col items-center gap-1"><Upload className="size-4" />Foto</span>
+        )}
+        <input type="file" accept="image/*" className="hidden" onChange={(e) => changeImage(e.target.files?.[0])} />
+      </label>
+      <div className="flex-1 space-y-2">
+        <div className="grid gap-2 sm:grid-cols-[1fr_8rem]">
+          <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Nome" />
+          <Input value={price} onChange={(e) => setPrice(e.target.value)} placeholder="Prezzo €" inputMode="decimal" />
+        </div>
+        <Textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Descrizione" rows={2} />
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="flex items-center gap-2">
+            <Switch checked={product.available} onCheckedChange={(v) => update({ available: v })} />
+            <span className="text-sm">{product.available ? "Disponibile" : "Esaurito"}</span>
+          </div>
+          <Button size="sm" onClick={save} disabled={busy}>
+            {busy && <Loader2 className="size-4 animate-spin" />}Salva
+          </Button>
+          <Button size="sm" variant="destructive" onClick={remove}>
+            <Trash2 className="size-4" />
+          </Button>
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -781,6 +955,8 @@ function AppearancePanel() {
   const { data } = useSiteSettings();
   const [color, setColor] = useState("#e3a53f");
   const [tagline, setTagline] = useState("");
+  const [heroImage, setHeroImage] = useState("/images/hero.jpg");
+  const [imageBusy, setImageBusy] = useState(false);
 
   useEffect(() => {
     if (data?.primary_color) setColor(data.primary_color);
@@ -789,6 +965,30 @@ function AppearancePanel() {
   useEffect(() => {
     if (data?.hero_tagline !== undefined) setTagline(data?.hero_tagline ?? "");
   }, [data?.hero_tagline]);
+
+  useEffect(() => {
+    if (data?.hero_image_url) setHeroImage(data.hero_image_url);
+  }, [data?.hero_image_url]);
+
+  async function changeHeroImage(file: File | undefined) {
+    if (!file || !data) return;
+    setImageBusy(true);
+    try {
+      const url = await uploadMedia(file, "hero");
+      const { error } = await supabase
+        .from("site_settings")
+        .update({ hero_image_url: url })
+        .eq("id", data.id);
+      if (error) throw error;
+      setHeroImage(url);
+      await qc.invalidateQueries({ queryKey: settingsQueryKey });
+      toast.success("Sfondo della home aggiornato");
+    } catch {
+      toast.error("Caricamento dello sfondo non riuscito");
+    } finally {
+      setImageBusy(false);
+    }
+  }
 
   const save = useMutation({
     mutationFn: async () => {
@@ -808,6 +1008,35 @@ function AppearancePanel() {
 
   return (
     <Section title="Aspetto della home">
+      <div className="mb-6 sm:max-w-xl">
+        <Label htmlFor="hero-background">Sfondo della home</Label>
+        <div className="mt-2 overflow-hidden rounded-xl border border-border">
+          <img
+            src={heroImage}
+            alt="Anteprima dello sfondo della home"
+            className="aspect-video w-full object-cover"
+          />
+        </div>
+        <Label
+          htmlFor="hero-background"
+          className="mt-3 inline-flex cursor-pointer items-center gap-2 rounded-lg border border-border px-4 py-2"
+        >
+          {imageBusy ? <Loader2 className="size-4 animate-spin" /> : <Upload className="size-4" />}
+          Cambia sfondo
+        </Label>
+        <input
+          id="hero-background"
+          type="file"
+          accept="image/jpeg,image/png,image/webp"
+          className="hidden"
+          disabled={imageBusy}
+          onChange={(e) => changeHeroImage(e.target.files?.[0])}
+        />
+        <p className="mt-2 text-xs text-muted-foreground">
+          Per una resa ottimale usa una foto orizzontale da 1920 × 1080 px, almeno 1600 × 900 px,
+          in formato JPG o WebP. Mantieni il soggetto principale verso il centro.
+        </p>
+      </div>
       <div className="flex flex-wrap items-center gap-3">
         <input
           type="color"

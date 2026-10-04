@@ -1,0 +1,2 @@
+ALTER TABLE public.site_settings
+ADD COLUMN IF NOT EXISTS hero_image_url text NOT NULL DEFAULT '/images/hero.jpg';

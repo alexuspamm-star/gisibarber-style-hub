@@ -2,7 +2,44 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
-import { ImagePlus, Loader2, CheckCircle2, Home } from "lucide-react";
+import { ImagePlus, Loader2, CheckCircle2, Home, CalendarPlus } from "lucide-react";
+
+function addToCalendar(date: string, time: string) {
+  const start = `${date.replaceAll("-", "")}T${time.replace(":", "")}00`;
+  const end = new Date(`${date}T${time}:00`);
+  end.setMinutes(end.getMinutes() + 30);
+  const p = (n: number) => String(n).padStart(2, "0");
+  const endStr = `${end.getFullYear()}${p(end.getMonth() + 1)}${p(end.getDate())}T${p(end.getHours())}${p(end.getMinutes())}00`;
+  const isAndroid = /android/i.test(navigator.userAgent);
+  if (isAndroid) {
+    const url = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=Barbiere&dates=${start}/${endStr}&ctz=Europe/Rome&location=Gisilbarber`;
+    window.open(url, "_blank");
+    return;
+  }
+  const ics = [
+    "BEGIN:VCALENDAR",
+    "VERSION:2.0",
+    "PRODID:-//Gisilbarber//Prenotazione//IT",
+    "BEGIN:VEVENT",
+    `UID:${crypto.randomUUID()}@gisilbarber`,
+    `DTSTAMP:${new Date().toISOString().replace(/[-:]/g, "").split(".")[0]}Z`,
+    `DTSTART;TZID=Europe/Rome:${start}`,
+    `DTEND;TZID=Europe/Rome:${endStr}`,
+    "SUMMARY:Barbiere",
+    "LOCATION:Gisilbarber",
+    "END:VEVENT",
+    "END:VCALENDAR",
+  ].join("\r\n");
+  const blob = new Blob([ics], { type: "text/calendar;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "barbiere.ics";
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
 
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -16,17 +53,19 @@ import { buildSlots, normalizeTime, toISODate, WEEKDAYS, type WorkHour } from "@
 export const Route = createFileRoute("/prenota")({
   head: () => ({
     meta: [
-      { title: "Prenota un taglio — Gisibarber" },
+      { title: "Prenota un taglio — Gisilbarber" },
       {
         name: "description",
         content:
-          "Scegli giorno e orario, descrivi il taglio che vuoi e prenota il tuo posto da Gisibarber.",
+          "Scegli giorno e orario, descrivi il taglio che vuoi e prenota il tuo posto da Gisilbarber.",
       },
-      { property: "og:title", content: "Prenota un taglio — Gisibarber" },
+      { property: "og:title", content: "Prenota un taglio — Gisilbarber" },
       {
         property: "og:description",
         content: "Prenotazione online: giorno, orario e il taglio che desideri.",
       },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
   component: Prenota,
@@ -40,7 +79,22 @@ function Prenota() {
   const [phone, setPhone] = useState("");
   const [description, setDescription] = useState("");
   const [file, setFile] = useState<File | null>(null);
+  const [withProduct, setWithProduct] = useState(false);
+  const [product, setProduct] = useState("");
   const [done, setDone] = useState(false);
+
+  const { data: products } = useQuery({
+    queryKey: ["products"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("products")
+        .select("id, name")
+        .eq("available", true)
+        .order("sort_order");
+      if (error) throw error;
+      return data;
+    },
+  });
 
   const { data: hours } = useQuery({
     queryKey: ["work_hours"],
@@ -105,6 +159,7 @@ function Prenota() {
         phone: phone.trim(),
         description: description.trim() || null,
         image_url: imageUrl,
+        product_name: withProduct && product ? product : null,
       });
       if (error) throw error;
     },
@@ -129,6 +184,13 @@ function Prenota() {
           </p>
           <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
             <Button
+              variant="secondary"
+              className="uppercase tracking-widest"
+              onClick={() => addToCalendar(date, time)}
+            >
+              <CalendarPlus className="size-4" /> Aggiungi al Calendario
+            </Button>
+            <Button
               className="uppercase tracking-widest"
               onClick={() => {
                 setDone(false);
@@ -138,6 +200,8 @@ function Prenota() {
                 setPhone("");
                 setDescription("");
                 setFile(null);
+                setWithProduct(false);
+                setProduct("");
               }}
             >
               Nuova prenotazione
@@ -247,6 +311,40 @@ function Prenota() {
             onChange={(e) => setDescription(e.target.value)}
             placeholder="Es. fade basso, sfumatura sfumata sui lati, barba corta…"
           />
+        </div>
+
+        <div className="space-y-3 rounded-lg border border-border p-4">
+          <label className="flex cursor-pointer items-center gap-3">
+            <input
+              type="checkbox"
+              checked={withProduct}
+              onChange={(e) => {
+                setWithProduct(e.target.checked);
+                if (!e.target.checked) setProduct("");
+              }}
+              className="size-4 accent-[var(--primary)]"
+            />
+            <span className="text-sm font-medium">
+              Taglio + prodotto <span className="text-primary">25€</span>
+            </span>
+          </label>
+          <p className="text-xs text-muted-foreground">
+            Aggiungi un prodotto H14 al tuo taglio: lo ritiri e lo paghi in negozio.
+          </p>
+          {withProduct && (
+            <select
+              value={product}
+              onChange={(e) => setProduct(e.target.value)}
+              className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary"
+            >
+              <option value="">Scegli il prodotto…</option>
+              {(products ?? []).map((p) => (
+                <option key={p.id} value={p.name}>
+                  {p.name}
+                </option>
+              ))}
+            </select>
+          )}
         </div>
 
         <div className="space-y-2">

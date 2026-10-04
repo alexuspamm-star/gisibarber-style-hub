@@ -1,9 +1,9 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Home, Images, CalendarPlus, Menu, X, LockKeyhole } from "lucide-react";
+import { Home, Images, CalendarPlus, ShoppingBag, Menu, X, LockKeyhole } from "lucide-react";
 import { useEffect, useState } from "react";
 
 type NavItem = {
-  to: "/" | "/galleria" | "/prenota" | "/login";
+  to: "/" | "/galleria" | "/prenota" | "/prodotti" | "/login";
   label: string;
   icon: typeof Home;
   adminOnly?: boolean;
@@ -12,6 +12,7 @@ type NavItem = {
 const items: NavItem[] = [
   { to: "/", label: "Home", icon: Home },
   { to: "/galleria", label: "Galleria", icon: Images },
+  { to: "/prodotti", label: "Prodotti", icon: ShoppingBag },
   { to: "/prenota", label: "Prenota", icon: CalendarPlus },
   { to: "/login", label: "Login", icon: LockKeyhole, adminOnly: true },
 ];
@@ -29,7 +30,7 @@ export function FloatingNav() {
       <div className="glass pointer-events-auto w-full max-w-md rounded-2xl px-3 py-2 shadow-2xl">
         <div className="flex items-center justify-between gap-2">
           <Link to="/" className="display px-2 text-xl tracking-widest text-primary">
-            GISIBARBER
+            GISILBARBER
           </Link>
 
           <div className="flex items-center gap-1">
