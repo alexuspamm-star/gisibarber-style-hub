@@ -139,3 +139,10 @@
 .marquee-track:hover {
   animation-play-state: paused;
 }
+
+/* Su schermi stretti lo sfondo della home segue il punto di messa a fuoco scelto dall'admin */
+@media (max-width: 767px) {
+  .hero-focus {
+    object-position: var(--hero-focus, 50% 50%);
+  }
+}

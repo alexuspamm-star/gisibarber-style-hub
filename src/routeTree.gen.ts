@@ -14,6 +14,7 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as GalleriaRouteImport } from './routes/galleria'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as PrenotaRouteImport } from './routes/prenota'
+import { Route as ProdottiRouteImport } from './routes/prodotti'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 
 const IndexRoute = IndexRouteImport.update({
@@ -40,6 +41,11 @@ const PrenotaRoute = PrenotaRouteImport.update({
   path: '/prenota',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ProdottiRoute = ProdottiRouteImport.update({
+  id: '/prodotti',
+  path: '/prodotti',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
@@ -51,6 +57,7 @@ export interface FileRoutesByFullPath {
   '/galleria': typeof GalleriaRoute
   '/login': typeof LoginRoute
   '/prenota': typeof PrenotaRoute
+  '/prodotti': typeof ProdottiRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
 }
 export interface FileRoutesByTo {
@@ -58,6 +65,7 @@ export interface FileRoutesByTo {
   '/galleria': typeof GalleriaRoute
   '/login': typeof LoginRoute
   '/prenota': typeof PrenotaRoute
+  '/prodotti': typeof ProdottiRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
 }
 export interface FileRoutesById {
@@ -67,13 +75,15 @@ export interface FileRoutesById {
   '/galleria': typeof GalleriaRoute
   '/login': typeof LoginRoute
   '/prenota': typeof PrenotaRoute
+  '/prodotti': typeof ProdottiRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/galleria' | '/login' | '/prenota' | '/dashboard'
+  fullPaths:
+    '/' | '/galleria' | '/login' | '/prenota' | '/prodotti' | '/dashboard'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/galleria' | '/login' | '/prenota' | '/dashboard'
+  to: '/' | '/galleria' | '/login' | '/prenota' | '/prodotti' | '/dashboard'
   id:
     | '__root__'
     | '/'
@@ -81,6 +91,7 @@ export interface FileRouteTypes {
     | '/galleria'
     | '/login'
     | '/prenota'
+    | '/prodotti'
     | '/_authenticated/dashboard'
   fileRoutesById: FileRoutesById
 }
@@ -90,6 +101,7 @@ export interface RootRouteChildren {
   GalleriaRoute: typeof GalleriaRoute
   LoginRoute: typeof LoginRoute
   PrenotaRoute: typeof PrenotaRoute
+  ProdottiRoute: typeof ProdottiRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -129,6 +141,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PrenotaRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/prodotti': {
+      id: '/prodotti'
+      path: '/prodotti'
+      fullPath: '/prodotti'
+      preLoaderRoute: typeof ProdottiRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/dashboard': {
       id: '/_authenticated/dashboard'
       path: '/dashboard'
@@ -156,6 +175,7 @@ const rootRouteChildren: RootRouteChildren = {
   GalleriaRoute: GalleriaRoute,
   LoginRoute: LoginRoute,
   PrenotaRoute: PrenotaRoute,
+  ProdottiRoute: ProdottiRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

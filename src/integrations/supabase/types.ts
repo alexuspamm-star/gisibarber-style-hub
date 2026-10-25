@@ -10,7 +10,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.5"
+    PostgrestVersion: "14.17"
   }
   public: {
     Tables: {
@@ -45,6 +45,7 @@ export type Database = {
           id: string
           image_url: string | null
           phone: string
+          product_name: string | null
           status: string
         }
         Insert: {
@@ -56,6 +57,7 @@ export type Database = {
           id?: string
           image_url?: string | null
           phone: string
+          product_name?: string | null
           status?: string
         }
         Update: {
@@ -67,6 +69,7 @@ export type Database = {
           id?: string
           image_url?: string | null
           phone?: string
+          product_name?: string | null
           status?: string
         }
         Relationships: []
@@ -83,6 +86,39 @@ export type Database = {
         Update: {
           day?: string
           reason?: string | null
+        }
+        Relationships: []
+      }
+      products: {
+        Row: {
+          available: boolean
+          created_at: string
+          description: string | null
+          id: string
+          image_url: string | null
+          name: string
+          price: number | null
+          sort_order: number
+        }
+        Insert: {
+          available?: boolean
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          name: string
+          price?: number | null
+          sort_order?: number
+        }
+        Update: {
+          available?: boolean
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          name?: string
+          price?: number | null
+          sort_order?: number
         }
         Relationships: []
       }
@@ -168,6 +204,9 @@ export type Database = {
         Row: {
           address: string
           created_at: string
+          hero_focus_x: number
+          hero_focus_y: number
+          hero_image_url: string
           hero_tagline: string
           id: string
           instagram_handle: string
@@ -182,6 +221,9 @@ export type Database = {
         Insert: {
           address?: string
           created_at?: string
+          hero_focus_x?: number
+          hero_focus_y?: number
+          hero_image_url?: string
           hero_tagline?: string
           id?: string
           instagram_handle?: string
@@ -196,6 +238,9 @@ export type Database = {
         Update: {
           address?: string
           created_at?: string
+          hero_focus_x?: number
+          hero_focus_y?: number
+          hero_image_url?: string
           hero_tagline?: string
           id?: string
           instagram_handle?: string
