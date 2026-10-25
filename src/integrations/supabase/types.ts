@@ -204,6 +204,8 @@ export type Database = {
         Row: {
           address: string
           created_at: string
+          hero_focus_x: number
+          hero_focus_y: number
           hero_image_url: string
           hero_tagline: string
           id: string
@@ -219,6 +221,8 @@ export type Database = {
         Insert: {
           address?: string
           created_at?: string
+          hero_focus_x?: number
+          hero_focus_y?: number
           hero_image_url?: string
           hero_tagline?: string
           id?: string
@@ -234,6 +238,8 @@ export type Database = {
         Update: {
           address?: string
           created_at?: string
+          hero_focus_x?: number
+          hero_focus_y?: number
           hero_image_url?: string
           hero_tagline?: string
           id?: string
