@@ -957,6 +957,8 @@ function AppearancePanel() {
   const [tagline, setTagline] = useState("");
   const [heroImage, setHeroImage] = useState("/images/hero.jpg");
   const [imageBusy, setImageBusy] = useState(false);
+  const [focusX, setFocusX] = useState(50);
+  const [focusY, setFocusY] = useState(50);
 
   useEffect(() => {
     if (data?.primary_color) setColor(data.primary_color);
@@ -969,6 +971,11 @@ function AppearancePanel() {
   useEffect(() => {
     if (data?.hero_image_url) setHeroImage(data.hero_image_url);
   }, [data?.hero_image_url]);
+
+  useEffect(() => {
+    if (data?.hero_focus_x !== undefined) setFocusX(data.hero_focus_x);
+    if (data?.hero_focus_y !== undefined) setFocusY(data.hero_focus_y);
+  }, [data?.hero_focus_x, data?.hero_focus_y]);
 
   async function changeHeroImage(file: File | undefined) {
     if (!file || !data) return;
@@ -995,7 +1002,12 @@ function AppearancePanel() {
       if (!data) throw new Error("Impostazioni non disponibili");
       const { error } = await supabase
         .from("site_settings")
-        .update({ primary_color: color, hero_tagline: tagline })
+        .update({
+          primary_color: color,
+          hero_tagline: tagline,
+          hero_focus_x: focusX,
+          hero_focus_y: focusY,
+        })
         .eq("id", data.id);
       if (error) throw error;
     },
@@ -1036,6 +1048,63 @@ function AppearancePanel() {
           Per una resa ottimale usa una foto orizzontale da 1920 × 1080 px, almeno 1600 × 900 px,
           in formato JPG o WebP. Mantieni il soggetto principale verso il centro.
         </p>
+
+        <div className="mt-6 rounded-xl border border-border p-4">
+          <p className="text-sm font-medium uppercase tracking-widest text-primary">
+            Regola formato sfondo
+          </p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Su telefono lo sfondo viene ritagliato: sposta i cursori per scegliere quale parte
+            resta visibile. L'anteprima mostra come apparirà su uno smartphone.
+          </p>
+          <div className="mt-4 flex flex-wrap items-start gap-6">
+            <div className="w-40 shrink-0 overflow-hidden rounded-2xl border border-border">
+              <img
+                src={heroImage}
+                alt="Anteprima dello sfondo su telefono"
+                className="aspect-[9/16] w-full object-cover"
+                style={{ objectPosition: `${focusX}% ${focusY}%` }}
+              />
+            </div>
+            <div className="min-w-56 flex-1 space-y-5">
+              <div>
+                <div className="mb-1 flex justify-between text-xs text-muted-foreground">
+                  <span>Sinistra</span>
+                  <span>Orizzontale</span>
+                  <span>Destra</span>
+                </div>
+                <input
+                  type="range"
+                  min={0}
+                  max={100}
+                  value={focusX}
+                  aria-label="Posizione orizzontale dello sfondo su telefono"
+                  onChange={(e) => setFocusX(Number(e.target.value))}
+                  className="w-full accent-[var(--primary)]"
+                />
+              </div>
+              <div>
+                <div className="mb-1 flex justify-between text-xs text-muted-foreground">
+                  <span>Alto</span>
+                  <span>Verticale</span>
+                  <span>Basso</span>
+                </div>
+                <input
+                  type="range"
+                  min={0}
+                  max={100}
+                  value={focusY}
+                  aria-label="Posizione verticale dello sfondo su telefono"
+                  onChange={(e) => setFocusY(Number(e.target.value))}
+                  className="w-full accent-[var(--primary)]"
+                />
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Ricordati di premere "Salva modifiche" per applicare la regolazione.
+              </p>
+            </div>
+          </div>
+        </div>
       </div>
       <div className="flex flex-wrap items-center gap-3">
         <input

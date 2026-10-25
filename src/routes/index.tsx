@@ -57,7 +57,11 @@ function Hero() {
         alt="Interno del barbershop Gisilbarber"
         width={1920}
         height={1080}
-        className="absolute inset-0 size-full object-cover opacity-55"
+        className="hero-focus absolute inset-0 size-full object-cover opacity-55"
+        style={{
+          ["--hero-focus" as string]:
+            `${settings?.hero_focus_x ?? 50}% ${settings?.hero_focus_y ?? 50}%`,
+        }}
       />
       <div className="fade-bottom absolute inset-0" />
       <div className="relative z-10 px-6 text-center">

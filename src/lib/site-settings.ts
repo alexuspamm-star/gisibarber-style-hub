@@ -13,6 +13,8 @@ export type SiteSettings = {
   map_url: string;
   hero_tagline: string;
   hero_image_url: string;
+  hero_focus_x: number;
+  hero_focus_y: number;
 };
 
 export const settingsQueryKey = ["site_settings"];
@@ -23,7 +25,7 @@ export function useSiteSettings() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("site_settings")
-        .select("id, primary_color, address, phone, instagram_handle, instagram_url, services, map_url, hero_tagline, hero_image_url")
+        .select("id, primary_color, address, phone, instagram_handle, instagram_url, services, map_url, hero_tagline, hero_image_url, hero_focus_x, hero_focus_y")
         .limit(1)
         .maybeSingle();
       if (error) throw error;
